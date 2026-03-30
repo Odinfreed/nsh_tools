@@ -426,8 +426,7 @@ furnished to do so, subject to the following conditions:
 
 **技术支持和反馈**
 
-- 📧 邮箱：support@nsh-battle-system.com
-- 💬 Issues：[GitHub Issues](https://github.com/yourusername/nsh-battle-system/issues)
+- 📧 邮箱：3135267085@qq,com
 - 🌟 欢迎Star和Fork！
 
 ---

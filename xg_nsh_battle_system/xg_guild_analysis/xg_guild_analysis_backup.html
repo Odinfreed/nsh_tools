@@ -83,6 +83,8 @@
             padding: 0;
             overflow-x: hidden;
             position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea rgba(30, 41, 59, 0.3);
         }
         
         /* 水墨背景 */
@@ -202,7 +204,7 @@
             scrollbar-color: #667eea rgba(30, 41, 59, 0.5);
         }
         .left-panel::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
         }
         .left-panel::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.3);
@@ -235,7 +237,7 @@
             scrollbar-color: #667eea rgba(30, 41, 59, 0.5);
         }
         .right-panel::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
         }
         .right-panel::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.3);
@@ -526,13 +528,30 @@
             margin-top: 4px;
         }
         
+        /* 全局滚动条统一主题色 */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7c8de0;
+        }
+        
         .scrollable-content {
             max-height: none;
             overflow-y: visible;
         }
         
         .scrollable-content::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         
         .scrollable-content::-webkit-scrollbar-track {
@@ -1896,7 +1915,7 @@
                     </div>
                     
                     <!-- 数据列表 -->
-                    <div id="relayDataList" class="bg-gray-800 rounded-lg p-2 text-xs border border-gray-600 hidden">
+                    <div id="relayDataList" class="bg-gray-800 rounded-lg p-2 text-xs border border-gray-600 hidden max-h-80 overflow-y-auto scrollable-content">
                         <!-- 接龙名单列表 -->
                     </div>
                 </div>
@@ -2558,7 +2577,7 @@
                             </div>
                             
                             <!-- 数据列表 -->
-                            <div id="relayDataList" class="bg-gray-800 rounded-lg p-2 text-xs border border-gray-600 hidden">
+                            <div id="relayDataList" class="bg-gray-800 rounded-lg p-2 text-xs border border-gray-600 hidden max-h-80 overflow-y-auto scrollable-content">
                                 <!-- 接龙名单列表 -->
                             </div>
                         </div>

@@ -7421,6 +7421,7 @@
                         ${joinDays !== null ? `<div class="flex justify-between"><span class="text-gray-400">入盟时长:</span><span class="text-white">${joinDays}天</span></div>` : ''}
                         ${memberInfo.equipType ? `<div class="flex justify-between"><span class="text-gray-400">装备属性:</span><span class="text-white">${memberInfo.equipType}</span></div>` : ''}
                         ${memberInfo.preferGroup ? `<div class="flex justify-between"><span class="text-gray-400">优选团:</span><span class="text-white">${memberInfo.preferGroup}</span></div>` : ''}
+                        ${memberInfo.preferGroup2 ? `<div class="flex justify-between"><span class="text-gray-400">次选团:</span><span class="text-white">${memberInfo.preferGroup2}</span></div>` : ''}
                         ${memberInfo.guild === 'sub' ? `<div class="flex justify-between"><span class="text-gray-400">所属:</span><span class="text-yellow-400">二帮</span></div>` : ''}
                         ${memberInfo.guild === 'club' ? `<div class="flex justify-between"><span class="text-gray-400">所属:</span><span class="text-purple-400">俱乐部</span></div>` : ''}
                     </div>
@@ -10877,7 +10878,25 @@
                 return;
             }
 
-            relayData = pendingRelayData;
+            // 如果已有接龙数据，询问导入模式
+            if (relayData.length > 0) {
+                const isAppend = confirm(
+                    `当前已有 ${relayData.length} 条接龙记录。\n\n` +
+                    `点击「确定」→ 补充导入（保留原有记录，同名覆盖更新，新增追加）\n` +
+                    `点击「取消」→ 重新全局导入（清空原有记录，全部重新导入）`
+                );
+                if (isAppend) {
+                    // 补充导入：用 Map 去重，同名覆盖，保留旧数据中未更新的
+                    const mergedMap = new Map();
+                    relayData.forEach(item => mergedMap.set(item.xg_relay_player_name, item));
+                    pendingRelayData.forEach(item => mergedMap.set(item.xg_relay_player_name, item));
+                    relayData = Array.from(mergedMap.values());
+                } else {
+                    relayData = pendingRelayData;
+                }
+            } else {
+                relayData = pendingRelayData;
+            }
             pendingRelayData = [];
 
             // 保存到localStorage

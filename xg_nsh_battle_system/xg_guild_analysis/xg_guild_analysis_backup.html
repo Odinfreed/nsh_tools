@@ -1541,12 +1541,12 @@
                                     </div>
                                     <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-700 flex-wrap">
                                         <button onclick="exportTeamStructureToJSON()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700">
-                                            <i class="fas fa-file-export mr-1"></i>导出 JSON
+                                            <i class="fas fa-file-export mr-1"></i>导出数据
                                         </button>
                                         <button onclick="document.getElementById('importTeamJSONInput').click()" class="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700">
-                                            <i class="fas fa-file-import mr-1"></i>导入 JSON
+                                            <i class="fas fa-file-import mr-1"></i>导入数据
                                         </button>
-                                        <input type="file" id="importTeamJSONInput" class="hidden" accept=".json" onchange="importTeamStructureFromJSON(event)">
+                                        <input type="file" id="importTeamJSONInput" class="hidden" accept=".fdh,.json" onchange="importTeamStructureFromJSON(event)">
                                         <button onclick="exportTeamStructureToExcel()" class="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs hover:bg-purple-700">
                                             <i class="fas fa-file-excel mr-1"></i>导出 Excel
                                         </button>
@@ -1636,7 +1636,7 @@
                                     <button type="button" onclick="document.getElementById('squadOptionsImportFile').click()" class="px-4 py-2 bg-gray-700 rounded-lg text-white text-sm hover:bg-gray-600">
                                         <i class="fas fa-upload mr-1"></i>导入配置
                                     </button>
-                                    <input type="file" id="squadOptionsImportFile" accept=".json" class="hidden" onchange="importSquadOptions(event)">
+                                    <input type="file" id="squadOptionsImportFile" accept=".fdh,.json" class="hidden" onchange="importSquadOptions(event)">
                                 </div>
                             </div>
 
@@ -1746,10 +1746,10 @@
                                                 <button type="button" onclick="syncGuildMembersFromData()" class="w-8 h-8 flex items-center justify-center rounded bg-green-600 text-white text-xs hover:bg-green-700" title="从当前帮会数据同步">
                                                     <i class="fas fa-sync"></i>
                                                 </button>
-                                                <button type="button" onclick="exportGuildMembers()" class="w-8 h-8 flex items-center justify-center rounded bg-blue-600 text-white text-xs hover:bg-blue-700" title="导出成员列表(JSON)">
+                                                <button type="button" onclick="exportGuildMembers()" class="w-8 h-8 flex items-center justify-center rounded bg-blue-600 text-white text-xs hover:bg-blue-700" title="导出成员列表(FDH)">
                                                     <i class="fas fa-file-export"></i>
                                                 </button>
-                                                <button type="button" onclick="importGuildMembers()" class="w-8 h-8 flex items-center justify-center rounded bg-purple-600 text-white text-xs hover:bg-purple-700" title="导入成员列表(JSON)">
+                                                <button type="button" onclick="importGuildMembers()" class="w-8 h-8 flex items-center justify-center rounded bg-purple-600 text-white text-xs hover:bg-purple-700" title="导入成员列表(FDH)">
                                                     <i class="fas fa-file-import"></i>
                                                 </button>
                                                 <button type="button" onclick="downloadGuildMemberExcelTemplate()" class="w-8 h-8 flex items-center justify-center rounded bg-indigo-600 text-white text-xs hover:bg-indigo-700" title="下载Excel收集模板">
@@ -1764,7 +1764,7 @@
                                                 <button type="button" onclick="clearGuildMembers()" class="w-8 h-8 flex items-center justify-center rounded bg-red-600 text-white text-xs hover:bg-red-700" title="清空本帮成员">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
-                                                <input type="file" id="guildMemberImportFile" class="hidden" accept=".json" onchange="handleGuildMemberImport(event)">
+                                                <input type="file" id="guildMemberImportFile" class="hidden" accept=".fdh,.json" onchange="handleGuildMemberImport(event)">
                                                 <input type="file" id="guildMemberExcelImportFile" class="hidden" accept=".xlsx,.xls" onchange="handleGuildMemberExcelImport(event)">
                                             </div>
                                             <div class="flex gap-2 flex-wrap">
@@ -6545,12 +6545,17 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    const fileObj = JSON.parse(e.target.result);
+                    const content = e.target.result;
                     let data;
-                    if (fileObj._xg_crypto) {
-                        data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                    if (content.trim().startsWith('FDHTXT1')) {
+                        data = await XG_CRYPTO_MODULE.importEncrypted(content, 'xg_guild_crypto_key');
                     } else {
-                        data = fileObj; // 兼容旧格式明文
+                        const fileObj = JSON.parse(content);
+                        if (fileObj._xg_crypto) {
+                            data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                        } else {
+                            data = fileObj; // 兼容旧格式明文
+                        }
                     }
                     if (!data.members || !Array.isArray(data.members)) {
                         alert('文件格式错误：未找到成员数组');
@@ -6570,6 +6575,9 @@
                     saveGuildMembers();
                     renderGuildMemberList();
                     renderMemberPool();
+                    renderAllTeams();
+                    updateTeamAnalysisTable();
+                    updateTeamRightPanel();
                     alert(`成功导入 ${guildMembers.length} 名成员`);
                 } catch (err) {
                     alert('导入失败：' + err.message);
@@ -6911,6 +6919,9 @@
         function onMemberPoolSourceChange(value) {
             memberPoolGuildSource = value;
             renderMemberPool();
+            renderAllTeams();
+            updateTeamAnalysisTable();
+            updateTeamRightPanel();
         }
 
         function updateMemberPoolSourceOptions() {
@@ -7638,6 +7649,27 @@
                                     const bgStyle = getProfessionBackgroundStyle(profession);
                                     const contrastColor = getContrastTextColor(profession);
 
+                                    const relayItem = findRelayByPlayerName(playerName);
+                                    const benchBadge = relayItem && relayItem.xg_relay_status === '替补'
+                                        ? '<span class="ml-1 px-1 py-0 bg-yellow-600 text-white rounded text-[9px] flex-shrink-0">替补</span>'
+                                        : '';
+
+                                    // 判断成员是否"不在当前标准数据源中"
+                                    const filterByRelay = document.getElementById('filterByRelayData');
+                                    const useRelayFilter = filterByRelay && filterByRelay.checked && relayData.length > 0;
+                                    let isUnknownMember = false;
+                                    if (useRelayFilter) {
+                                        // 以接龙名单为基准
+                                        isUnknownMember = playerName && !relayItem;
+                                    } else {
+                                        // 以帮会成员列表为基准（按当前选中的数据源动态判断）
+                                        isUnknownMember = playerName && !guildMembers.find(m => m.name === playerName && !m.deleted && m.guild === memberPoolGuildSource);
+                                    }
+
+                                    // 若当前标准数据源中不存在该成员，底色变灰且不可编辑定位/技能
+                                    const finalBgStyle = isUnknownMember ? 'background-color: #6b7280;' : bgStyle;
+                                    const finalContrastColor = isUnknownMember ? '#e5e7eb' : contrastColor;
+
                                     const positionsOptions = loadSquadOptions('positions');
                                     const skillsOptions = loadSquadOptions('skills');
 
@@ -7656,9 +7688,11 @@
                                     }).join('');
                                     const posViewText = selPos || '无';
                                     const posViewClass = selPos ? 'text-gray-200' : 'text-gray-400';
-                                    const posCellHtml = posCandidates.length > 0
-                                        ? `<span class="cell-view text-xs ${posViewClass} truncate cursor-pointer select-none" ondblclick="enterGroupEdit(this)" title="双击编辑">${posViewText}</span><select class="cell-edit hidden w-full text-[10px] bg-gray-700 text-white rounded px-1 py-0.5 border border-gray-600" onblur="exitGroupEdit(this)" onchange="selectGroupPosition('${teamName}', ${groupIndex}, ${i}, this.value); exitGroupEdit(this);"><option value="">无</option>${posSelectOptions}</select>`
-                                        : '<span class="text-xs text-gray-400">无</span>';
+                                    const posCellHtml = isUnknownMember
+                                        ? `<span class="text-xs text-gray-500" title="当前数据源中无此成员，不可编辑">${posViewText}</span>`
+                                        : (posCandidates.length > 0
+                                            ? `<span class="cell-view text-xs ${posViewClass} truncate cursor-pointer select-none" ondblclick="enterGroupEdit(this)" title="双击编辑">${posViewText}</span><select class="cell-edit hidden w-full text-[10px] bg-gray-700 text-white rounded px-1 py-0.5 border border-gray-600" onblur="exitGroupEdit(this)" onchange="selectGroupPosition('${teamName}', ${groupIndex}, ${i}, this.value); exitGroupEdit(this);"><option value="">无</option>${posSelectOptions}</select>`
+                                            : '<span class="text-xs text-gray-400">无</span>');
 
                                     // 技能内功：默认显示文本，双击弹出select多选
                                     const skillSelectOptions = skillCandidates.map(opt => {
@@ -7667,9 +7701,11 @@
                                     }).join('');
                                     const skillViewText = selSkills.join('，') || '无';
                                     const skillViewClass = selSkills.length > 0 ? 'text-gray-200' : 'text-gray-400';
-                                    const skillCellHtml = skillCandidates.length > 0
-                                        ? `<span class="cell-view text-xs ${skillViewClass} truncate cursor-pointer select-none" ondblclick="enterGroupEdit(this)" title="双击编辑">${skillViewText}</span><select multiple class="cell-edit hidden w-full text-[10px] bg-gray-700 text-white rounded px-1 py-0.5 border border-gray-600" size="2" onblur="exitGroupEdit(this)" onchange="selectGroupSkills('${teamName}', ${groupIndex}, ${i}, this); saveTeamStructure();">${skillSelectOptions}</select>`
-                                        : '<span class="text-xs text-gray-400">无</span>';
+                                    const skillCellHtml = isUnknownMember
+                                        ? `<span class="text-xs text-gray-500" title="当前数据源中无此成员，不可编辑">${skillViewText}</span>`
+                                        : (skillCandidates.length > 0
+                                            ? `<span class="cell-view text-xs ${skillViewClass} truncate cursor-pointer select-none" ondblclick="enterGroupEdit(this)" title="双击编辑">${skillViewText}</span><select multiple class="cell-edit hidden w-full text-[10px] bg-gray-700 text-white rounded px-1 py-0.5 border border-gray-600" size="2" onblur="exitGroupEdit(this)" onchange="selectGroupSkills('${teamName}', ${groupIndex}, ${i}, this); saveTeamStructure();">${skillSelectOptions}</select>`
+                                            : '<span class="text-xs text-gray-400">无</span>');
 
                                     return `
                                         <tr ondragover="handleDragOver(event, this)" ondrop="assignPlayerToGroupSlot(event, '${teamName}', ${groupIndex}, ${i})">
@@ -7679,13 +7715,9 @@
                                                     const yxqGroupIdx = getYxqGroupIndexByName(playerName);
                                                     const yxqColor = yxqGroupIdx >= 0 ? getYxqGroupColor(yxqGroupIdx) : '#ec4899';
                                                     const yxqIcon = partner ? `<span class="ml-1 text-[10px]" style="color: ${yxqColor}" title="一线牵: ${partner}"><i class="fas fa-link"></i></span>` : '';
-                                                    const relayItem = findRelayByPlayerName(playerName);
-                                                    const benchBadge = relayItem && relayItem.xg_relay_status === '替补'
-                                                        ? '<span class="ml-1 px-1 py-0 bg-yellow-600 text-white rounded text-[9px] flex-shrink-0">替补</span>'
-                                                        : '';
                                                     return `
-                                                    <div draggable="true" data-player-name="${playerName}" ondragstart="handleDragStart(event, '${playerName.replace(/'/g, "\\'")}')" class="cursor-move rounded px-1.5 py-0.5 text-xs flex items-center justify-between" style="${bgStyle}; color: ${contrastColor}">
-                                                        <span class="truncate font-medium" title="${playerName}${partner ? ' [一线牵: ' + partner + ']' : ''}">${playerName}${benchBadge}${yxqIcon}</span>
+                                                    <div draggable="true" data-player-name="${playerName}" ondragstart="handleDragStart(event, '${playerName.replace(/'/g, "\\'")}')" class="cursor-move rounded px-1.5 py-0.5 text-xs flex items-center justify-between" style="${finalBgStyle}; color: ${finalContrastColor}">
+                                                        <span class="truncate font-medium" title="${playerName}${partner ? ' [一线牵: ' + partner + ']' : ''}${isUnknownMember ? ' [当前数据源中无此成员]' : ''}">${playerName}${benchBadge}${yxqIcon}</span>
                                                         <button onclick="removeMemberFromGroup('${teamName}', ${groupIndex}, ${i})" class="ml-1 opacity-70 hover:opacity-100 text-[10px]" title="移除">
                                                             <i class="fas fa-times"></i>
                                                         </button>
@@ -7693,8 +7725,8 @@
                                                     `;
                                                 })() : `<div class="h-6 bg-gray-900/50 rounded border border-dashed border-gray-700"></div>`}
                                             </td>
-                                            <td class="p-1 align-middle" ondblclick="enterGroupEdit(this)">${posCellHtml}</td>
-                                            <td class="p-1 align-middle" ondblclick="enterGroupEdit(this)">${skillCellHtml}</td>
+                                            <td class="p-1 align-middle"${isUnknownMember ? '' : ' ondblclick="enterGroupEdit(this)"'}>${posCellHtml}</td>
+                                            <td class="p-1 align-middle"${isUnknownMember ? '' : ' ondblclick="enterGroupEdit(this)"'}>${skillCellHtml}</td>
                                         </tr>
                                     `;
                                 }).join('')}
@@ -7718,6 +7750,16 @@
             const modal = document.getElementById('teamImageModal');
             if (modal) modal.classList.add('hidden');
             document.body.style.overflow = '';
+        }
+
+        // 辅助：按每 N 个字符切割文本，超长的用 <br> 换行（用于排表图片技能内功列）
+        function wrapSkillsByLength(text, maxLen) {
+            if (!text || text.length <= maxLen) return text;
+            const lines = [];
+            for (let i = 0; i < text.length; i += maxLen) {
+                lines.push(text.slice(i, i + maxLen));
+            }
+            return lines.join('<br>');
         }
 
         function renderTeamImageContent() {
@@ -7784,20 +7826,21 @@
                             if (typeof skills === 'string') skills = skills ? [skills] : [];
                             if (!Array.isArray(skills)) skills = [];
                             const skillsStr = skills.join('，') || '';
+                            const skillsDisplay = skillsStr ? wrapSkillsByLength(skillsStr, 13) : '';
                             html += `<tr style="border-bottom:1px solid #1f2937;">`;
-                            html += `<td style="padding:4px 6px;">`;
+                            html += `<td style="padding:6px 6px;">`;
                             html += `<div style="display:flex;align-items:center;gap:6px;">`;
                             html += `<span style="width:6px;height:6px;border-radius:50%;background:${bgColor};flex-shrink:0;"></span>`;
                             html += `<span style="font-weight:500;color:#f3f4f6;">${playerName}</span>${benchBadge}`;
                             html += `</div></td>`;
-                            html += `<td style="padding:4px 6px;color:#6ee7b7;">${pos || '<span style="color:#4b5563;">—</span>'}</td>`;
-                            html += `<td style="padding:4px 6px;color:#fcd34d;">${skillsStr || '<span style="color:#4b5563;">—</span>'}</td>`;
+                            html += `<td style="padding:6px 6px;color:#6ee7b7;">${pos || '<span style="color:#4b5563;">—</span>'}</td>`;
+                            html += `<td style="padding:6px 6px;color:#fcd34d;white-space:normal;word-wrap:break-word;line-height:1.5;">${skillsDisplay || '<span style="color:#4b5563;">—</span>'}</td>`;
                             html += `</tr>`;
                         } else {
                             html += `<tr style="border-bottom:1px solid #1f2937;">`;
-                            html += `<td style="padding:4px 6px;color:#4b5563;">— 空位 —</td>`;
-                            html += `<td style="padding:4px 6px;color:#4b5563;">—</td>`;
-                            html += `<td style="padding:4px 6px;color:#4b5563;">—</td>`;
+                            html += `<td style="padding:6px 6px;color:#4b5563;">— 空位 —</td>`;
+                            html += `<td style="padding:6px 6px;color:#4b5563;">—</td>`;
+                            html += `<td style="padding:6px 6px;color:#4b5563;">—</td>`;
                             html += `</tr>`;
                         }
                     }
@@ -8357,7 +8400,7 @@
             alert('所有团队配置已清空！');
         }
 
-        // 导出团队配置为JSON（加密导出，取消空数据校验以支持多次导出）
+        // 导出团队配置为FDH加密数据（取消空数据校验以支持多次导出）
         async function exportTeamStructureToJSON() {
             const selectedGuild = dataSourceManager.selectedGuild || '未知帮会';
             const exportData = {
@@ -8372,22 +8415,27 @@
 
             const encrypted = await XG_CRYPTO_MODULE.exportEncrypted(exportData, 'xg_guild_crypto_key', 'team-structure');
             downloadJsonFile(encrypted, generateXgFilename('团队配置'));
-            alert('团队配置已导出为JSON！');
+            alert('团队配置已导出为FDH加密数据！');
         }
 
-        // 从JSON导入团队配置（支持加密及旧格式兼容）
+        // 从FDH导入团队配置（支持加密及旧格式兼容）
         function importTeamStructureFromJSON(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    const fileObj = JSON.parse(e.target.result);
+                    const content = e.target.result;
                     let data;
-                    if (fileObj._xg_crypto) {
-                        data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                    if (content.trim().startsWith('FDHTXT1')) {
+                        data = await XG_CRYPTO_MODULE.importEncrypted(content, 'xg_guild_crypto_key');
                     } else {
-                        data = fileObj; // 兼容旧格式明文
+                        const fileObj = JSON.parse(content);
+                        if (fileObj._xg_crypto) {
+                            data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                        } else {
+                            data = fileObj; // 兼容旧格式明文
+                        }
                     }
                     if (data.teamStructure) {
                         teamStructure = data.teamStructure;
@@ -9831,12 +9879,17 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    const fileObj = JSON.parse(e.target.result);
+                    const content = e.target.result;
                     let data;
-                    if (fileObj._xg_crypto) {
-                        data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                    if (content.trim().startsWith('FDHTXT1')) {
+                        data = await XG_CRYPTO_MODULE.importEncrypted(content, 'xg_guild_crypto_key');
                     } else {
-                        data = fileObj; // 兼容旧格式明文
+                        const fileObj = JSON.parse(content);
+                        if (fileObj._xg_crypto) {
+                            data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                        } else {
+                            data = fileObj; // 兼容旧格式明文
+                        }
                     }
                     if (data.positions) saveSquadOptions('positions', data.positions);
                     if (data.skills) saveSquadOptions('skills', data.skills);
@@ -10064,6 +10117,135 @@
                 return bytesToString(plainBytes);
             }
 
+            // MD5 哈希（用于完整性校验）
+            function md5Hex(input) {
+                const hc = '0123456789abcdef';
+                function rh(n) { let j, s = ''; for (j = 0; j <= 3; j++) s += hc.charAt((n >> (j * 8 + 4)) & 0x0F) + hc.charAt((n >> (j * 8)) & 0x0F); return s; }
+                function ad(x, y) { const l = (x & 0xFFFF) + (y & 0xFFFF), m = (x >> 16) + (y >> 16) + (l >> 16); return (m << 16) | (l & 0xFFFF); }
+                function rl(n, c) { return (n << c) | (n >>> (32 - c)); }
+                function cm(q, a, b, x, s, t) { return ad(rl(ad(ad(a, q), ad(x, t)), s), b); }
+                function ff(a, b, c, d, x, s, t) { return cm((b & c) | ((~b) & d), a, b, x, s, t); }
+                function gg(a, b, c, d, x, s, t) { return cm((b & d) | (c & (~d)), a, b, x, s, t); }
+                function hh(a, b, c, d, x, s, t) { return cm(b ^ c ^ d, a, b, x, s, t); }
+                function ii(a, b, c, d, x, s, t) { return cm(c ^ (b | (~d)), a, b, x, s, t); }
+                let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
+                let olda, oldb, oldc, oldd;
+                const txt = unescape(encodeURIComponent(input));
+                const wl = ((txt.length + 8) >> 6) + 1;
+                const w = new Array(wl * 16);
+                for (let i = 0; i < wl * 16; i++) w[i] = 0;
+                for (let i = 0; i < txt.length; i++) w[i >> 2] |= txt.charCodeAt(i) << ((i % 4) << 3);
+                w[txt.length >> 2] |= 0x80 << ((txt.length % 4) << 3);
+                w[wl * 16 - 2] = txt.length * 8;
+                for (let i = 0; i < wl * 16; i += 16) {
+                    olda = a; oldb = b; oldc = c; oldd = d;
+                    a = ff(a, b, c, d, w[i+0], 7, -680876936);
+                    d = ff(d, a, b, c, w[i+1], 12, -389564586);
+                    c = ff(c, d, a, b, w[i+2], 17, 606105819);
+                    b = ff(b, c, d, a, w[i+3], 22, -1044525330);
+                    a = ff(a, b, c, d, w[i+4], 7, -176418897);
+                    d = ff(d, a, b, c, w[i+5], 12, 1200080426);
+                    c = ff(c, d, a, b, w[i+6], 17, -1473231341);
+                    b = ff(b, c, d, a, w[i+7], 22, -45705983);
+                    a = ff(a, b, c, d, w[i+8], 7, 1770035416);
+                    d = ff(d, a, b, c, w[i+9], 12, -1958414417);
+                    c = ff(c, d, a, b, w[i+10], 17, -42063);
+                    b = ff(b, c, d, a, w[i+11], 22, -1990404162);
+                    a = ff(a, b, c, d, w[i+12], 7, 1804603682);
+                    d = ff(d, a, b, c, w[i+13], 12, -40341101);
+                    c = ff(c, d, a, b, w[i+14], 17, -1502002290);
+                    b = ff(b, c, d, a, w[i+15], 22, 1236535329);
+                    a = gg(a, b, c, d, w[i+1], 5, -165796510);
+                    d = gg(d, a, b, c, w[i+6], 9, -1069501632);
+                    c = gg(c, d, a, b, w[i+11], 14, 643717713);
+                    b = gg(b, c, d, a, w[i+0], 20, -373897302);
+                    a = gg(a, b, c, d, w[i+5], 5, -701558691);
+                    d = gg(d, a, b, c, w[i+10], 9, 38016083);
+                    c = gg(c, d, a, b, w[i+15], 14, -660478335);
+                    b = gg(b, c, d, a, w[i+4], 20, -405537848);
+                    a = gg(a, b, c, d, w[i+9], 5, 568446438);
+                    d = gg(d, a, b, c, w[i+14], 9, -1019803690);
+                    c = gg(c, d, a, b, w[i+3], 14, -187363961);
+                    b = gg(b, c, d, a, w[i+8], 20, 1163531501);
+                    a = gg(a, b, c, d, w[i+13], 5, -1444681467);
+                    d = gg(d, a, b, c, w[i+2], 9, -51403784);
+                    c = gg(c, d, a, b, w[i+7], 14, 1735328473);
+                    b = gg(b, c, d, a, w[i+12], 20, -1926607734);
+                    a = hh(a, b, c, d, w[i+5], 4, -378558);
+                    d = hh(d, a, b, c, w[i+8], 11, -2022574463);
+                    c = hh(c, d, a, b, w[i+11], 16, 1839030562);
+                    b = hh(b, c, d, a, w[i+14], 23, -35309556);
+                    a = hh(a, b, c, d, w[i+1], 4, -1530992060);
+                    d = hh(d, a, b, c, w[i+4], 11, 1272893353);
+                    c = hh(c, d, a, b, w[i+7], 16, -155497632);
+                    b = hh(b, c, d, a, w[i+10], 23, -1094730640);
+                    a = hh(a, b, c, d, w[i+13], 4, 681279174);
+                    d = hh(d, a, b, c, w[i+0], 11, -358537222);
+                    c = hh(c, d, a, b, w[i+3], 16, -722521979);
+                    b = hh(b, c, d, a, w[i+6], 23, 76029189);
+                    a = hh(a, b, c, d, w[i+9], 4, -640364487);
+                    d = hh(d, a, b, c, w[i+12], 11, -421815835);
+                    c = hh(c, d, a, b, w[i+15], 16, 530742520);
+                    b = hh(b, c, d, a, w[i+2], 23, -995338651);
+                    a = ii(a, b, c, d, w[i+0], 6, -198630844);
+                    d = ii(d, a, b, c, w[i+7], 10, 1126891415);
+                    c = ii(c, d, a, b, w[i+14], 15, -1416354905);
+                    b = ii(b, c, d, a, w[i+5], 21, -57434055);
+                    a = ii(a, b, c, d, w[i+12], 6, 1700485571);
+                    d = ii(d, a, b, c, w[i+3], 10, -1894986606);
+                    c = ii(c, d, a, b, w[i+10], 15, -1051523);
+                    b = ii(b, c, d, a, w[i+1], 21, -2054922799);
+                    a = ii(a, b, c, d, w[i+8], 6, 1873313359);
+                    d = ii(d, a, b, c, w[i+15], 10, -30611744);
+                    c = ii(c, d, a, b, w[i+6], 15, -1560198380);
+                    b = ii(b, c, d, a, w[i+13], 21, 1309151649);
+                    a = ii(a, b, c, d, w[i+4], 6, -145523070);
+                    d = ii(d, a, b, c, w[i+11], 10, -1120210379);
+                    c = ii(c, d, a, b, w[i+2], 15, 718787259);
+                    b = ii(b, c, d, a, w[i+9], 21, -343485551);
+                    a = ad(a, olda); b = ad(b, oldb); c = ad(c, oldc); d = ad(d, oldd);
+                }
+                return rh(a) + rh(b) + rh(c) + rh(d);
+            }
+
+            // Gzip 压缩/解压（用于大文件自动压缩）
+            async function gzipString(str) {
+                const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+                const reader = stream.getReader();
+                const chunks = [];
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                }
+                const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                const result = new Uint8Array(totalLength);
+                let offset = 0;
+                for (const chunk of chunks) {
+                    result.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                return result;
+            }
+            async function gunzipBytes(bytes) {
+                const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+                const reader = stream.getReader();
+                const chunks = [];
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                }
+                const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                const result = new Uint8Array(totalLength);
+                let offset = 0;
+                for (const chunk of chunks) {
+                    result.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                return new TextDecoder().decode(result);
+            }
+
             // 构建头部信息（盐值+网站信息+加密模块版本号）
             function buildHeader(moduleName) {
                 const now = Date.now();
@@ -10075,28 +10257,110 @@
                     module: moduleName || 'unknown',
                     websiteUrl: 'https://odinfreed.github.io/nsh_tools/',
                     githubUrl: 'https://github.com/Odinfreed/nsh_tools',
-                    starMessage: '🌟 欢迎Star和Fork本项目！'
+                    starMessage: '🌟 欢迎Star和Fork本项目！',
+                    epilogue: '愿我如星君如月，夜夜流光相皎洁。\n春风若有怜花意，可否许我再少年。\n愿如星月伴流光，意气永相随。成长如星河清晰。春风怜花意，许你再少年。\nFrom：春风渡-春风渡星河'
                 };
             }
 
-            // 导出封装：返回可序列化的加密对象
+            // 导出封装：返回纯文本 FDH 格式字符串
             async function exportEncrypted(dataObj, keyStr, moduleName) {
                 const header = buildHeader(moduleName);
-                const plainText = JSON.stringify(dataObj);
+                let plainText = JSON.stringify(dataObj);
+                let isZipped = false;
+
+                // 数据过大时自动压缩（>500KB）
+                if (plainText.length > 500 * 1024 && typeof CompressionStream !== 'undefined') {
+                    const compressed = await gzipString(plainText);
+                    plainText = bytesToBase64(compressed);
+                    isZipped = true;
+                }
+
                 const payload = await encryptAsync(plainText, keyStr);
-                return {
-                    header: header,
-                    payload: payload,
-                    _xg_crypto: true
-                };
+                const hash = md5Hex(payload);
+
+                const lines = [];
+                lines.push('FDHTXT1');
+                lines.push('S:' + header.salt);
+                lines.push('SI:' + header.siteInfo);
+                lines.push('V:' + header.cryptoVersion);
+                lines.push('T:' + header.timestamp);
+                lines.push('M:' + header.module);
+                lines.push('U:' + header.websiteUrl);
+                lines.push('GH:' + header.githubUrl);
+                lines.push('MS:' + header.starMessage);
+                lines.push('H:' + hash);
+                if (isZipped) lines.push('ZIP:1');
+                lines.push('# 以下为加密数据，需通过本系统解密查看 #');
+                lines.push('---');
+                for (let i = 0; i < payload.length; i += 72) {
+                    lines.push(payload.slice(i, i + 72));
+                }
+                lines.push('---');
+                lines.push(header.epilogue);
+                lines.push(''); // 表尾寄语末尾增加一个空行
+                return lines.join('\n');
             }
 
-            // 导入解包
-            async function importEncrypted(fileObj, keyStr) {
-                if (!fileObj || !fileObj._xg_crypto || !fileObj.payload) {
-                    throw new Error('文件格式不正确：缺少加密标识或数据体');
+            // 导入解包（支持新纯文本格式及旧版JSON对象兼容）
+            async function importEncrypted(source, keyStr) {
+                // 兼容旧版 JSON 对象格式
+                if (source && typeof source === 'object' && source._xg_crypto) {
+                    const plainText = await decryptAsync(source.payload, keyStr);
+                    return JSON.parse(plainText);
                 }
-                const plainText = await decryptAsync(fileObj.payload, keyStr);
+                if (typeof source !== 'string') {
+                    throw new Error('文件格式不正确：无法识别的数据类型');
+                }
+
+                const text = source.trim();
+                if (!text.startsWith('FDHTXT1')) {
+                    throw new Error('文件格式不正确：缺少魔数标识或文件已损坏');
+                }
+
+                const lines = text.split('\n');
+                const headerMap = {};
+                let i = 1;
+                for (; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line === '# 以下为加密数据，需通过本系统解密查看 #' || line === '---') break;
+                    if (!line) continue;
+                    const colonIdx = line.indexOf(':');
+                    if (colonIdx > 0) {
+                        headerMap[line.slice(0, colonIdx)] = line.slice(colonIdx + 1);
+                    }
+                }
+
+                // 跳过注释行和起始 ---
+                while (i < lines.length && lines[i].trim() !== '---') i++;
+                if (i >= lines.length) throw new Error('文件格式不正确：缺少密文起始标记');
+                i++; // skip ---
+
+                const payloadLines = [];
+                while (i < lines.length && lines[i].trim() !== '---') {
+                    payloadLines.push(lines[i].trim());
+                    i++;
+                }
+                const payload = payloadLines.join('');
+
+                // 校验 HASH
+                if (headerMap.H) {
+                    const actualHash = md5Hex(payload);
+                    if (actualHash !== headerMap.H) {
+                        throw new Error('文件完整性校验失败：密文可能已损坏');
+                    }
+                }
+
+                let plainText = await decryptAsync(payload, keyStr);
+
+                // 自动解压
+                if (headerMap.ZIP === '1') {
+                    if (typeof DecompressionStream === 'undefined') {
+                        throw new Error('当前浏览器不支持自动解压，请使用支持 CompressionStream 的现代浏览器');
+                    }
+                    const compressedBytes = base64ToBytes(plainText);
+                    plainText = await gunzipBytes(compressedBytes);
+                }
+
                 return JSON.parse(plainText);
             }
 
@@ -10111,9 +10375,9 @@
             };
         })();
 
-        // 通用下载JSON文件
-        function downloadJsonFile(obj, filename) {
-            const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+        // 通用下载FDH加密数据文件
+        function downloadJsonFile(content, filename) {
+            const blob = new Blob([typeof content === 'string' ? content : JSON.stringify(content, null, 2)], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -11492,8 +11756,8 @@
             return dataWithUid;
         }
 
-        // 导出数据（带前缀映射）
-        function exportDataWithPrefixMapping() {
+        // 导出数据（带前缀映射，FDH加密格式）
+        async function exportDataWithPrefixMapping() {
             if (relayData.length === 0) {
                 alert('没有数据可导出');
                 return;
@@ -11507,24 +11771,30 @@
                 version: '1.0'
             };
 
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-                type: 'application/json' 
-            });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `接龙数据_${new Date().toLocaleDateString('zh-CN')}.json`;
-            link.click();
+            const encrypted = await XG_CRYPTO_MODULE.exportEncrypted(exportData, 'xg_guild_crypto_key', 'relay-data');
+            downloadJsonFile(encrypted, generateXgFilename('接龙数据'));
         }
 
-        // 导入数据（带前缀映射）
-        function importDataWithPrefixMapping(event) {
+        // 导入数据（带前缀映射，支持FDH加密及旧格式兼容）
+        async function importDataWithPrefixMapping(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
-                    const data = JSON.parse(e.target.result);
+                    const content = e.target.result;
+                    let data;
+                    if (content.trim().startsWith('FDHTXT1')) {
+                        data = await XG_CRYPTO_MODULE.importEncrypted(content, 'xg_guild_crypto_key');
+                    } else {
+                        const fileObj = JSON.parse(content);
+                        if (fileObj._xg_crypto) {
+                            data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
+                        } else {
+                            data = fileObj; // 兼容旧格式明文
+                        }
+                    }
                     
                     relayData = data.relay_data || [];
                     yxqGroups = data.yxq_groups || [];
@@ -11540,7 +11810,8 @@
 
                     alert('数据导入成功');
                 } catch (error) {
-                    alert('导入失败：文件格式错误');
+                    console.error('导入失败:', error);
+                    alert('导入失败：' + (error.message || '文件格式错误'));
                 }
             };
             reader.readAsText(file);
@@ -11553,8 +11824,11 @@
                 document.getElementById('relayFilterCount').textContent = relayData.length;
             }
 
-            // 重新渲染成员池
+            // 重新渲染成员池与团内排表（确保底色实时刷新）
             renderMemberPool();
+            renderAllTeams();
+            updateTeamAnalysisTable();
+            updateTeamRightPanel();
         }
 
         // ==================== 智能分团系统 ====================

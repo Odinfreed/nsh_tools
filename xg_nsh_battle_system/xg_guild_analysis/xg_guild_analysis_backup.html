@@ -7960,6 +7960,33 @@
             return lines.join('<br>');
         }
 
+        // 排表图片中已确认入团的成员集合
+        let confirmedMembers = new Set();
+        try {
+            const saved = localStorage.getItem('xg_confirmed_members');
+            if (saved) {
+                const arr = JSON.parse(saved);
+                if (Array.isArray(arr)) confirmedMembers = new Set(arr);
+            }
+        } catch (e) { /* ignore */ }
+
+        function toggleConfirmMember(playerName) {
+            if (confirmedMembers.has(playerName)) {
+                confirmedMembers.delete(playerName);
+            } else {
+                confirmedMembers.add(playerName);
+            }
+            localStorage.setItem('xg_confirmed_members', JSON.stringify(Array.from(confirmedMembers)));
+            renderTeamImageContent();
+        }
+
+        function clearAllConfirmedMembers() {
+            if (!confirm('确定要清空所有入团确认标记吗？')) return;
+            confirmedMembers.clear();
+            localStorage.removeItem('xg_confirmed_members');
+            renderTeamImageContent();
+        }
+
         function renderTeamImageContent() {
             const container = document.getElementById('teamImageContent');
             if (!container) return;
@@ -7986,14 +8013,15 @@
                     const members = group.members || [];
                     group.positions = group.positions || Array(group.limit).fill('');
                     group.skills = group.skills || Array(group.limit).fill([]);
-                    html += '<div style="background: #111827; border-radius: 8px; padding: 10px; min-width: 280px; flex: 1; border: 1px solid #374151;">';
+                    html += '<div style="background: #111827; border-radius: 8px; padding: 10px; min-width: 320px; flex: 1; border: 1px solid #374151;">';
                     html += `<div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #d1d5db;">${group.name} <span style="color: #6b7280; font-size: 11px;">(${members.length}/${group.limit})</span></div>`;
-                    // 表格形式展示：游戏ID、定位、技能内功
+                    // 表格形式展示：游戏ID、定位、技能内功、确认
                     html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
                     html += '<thead><tr style="color:#9ca3af;font-size:11px;border-bottom:1px solid #374151;">';
                     html += '<th style="text-align:left;padding:4px 6px;font-weight:500;">游戏ID</th>';
                     html += '<th style="text-align:left;padding:4px 6px;font-weight:500;">定位</th>';
                     html += '<th style="text-align:left;padding:4px 6px;font-weight:500;">技能内功</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;font-weight:500;width:40px;">确认</th>';
                     html += '</tr></thead><tbody>';
                     for (let i = 0; i < group.limit; i++) {
                         const playerName = members[i] || '';
@@ -8025,20 +8053,25 @@
                             if (!Array.isArray(skills)) skills = [];
                             const skillsStr = skills.join('，') || '';
                             const skillsDisplay = skillsStr ? wrapSkillsByLength(skillsStr, 13) : '';
-                            html += `<tr style="border-bottom:1px solid #1f2937;">`;
-                            html += `<td style="padding:6px 6px;">`;
+                            const isConfirmed = confirmedMembers.has(playerName);
+                            const confirmCheck = isConfirmed ? '<span style="color:#22c55e;font-size:14px;font-weight:bold;">✓</span>' : '';
+                            const rowBg = isConfirmed ? 'background:rgba(34,197,94,0.08);' : '';
+                            html += `<tr style="border-bottom:1px solid #1f2937;${rowBg}">`;
+                            html += `<td style="padding:6px 6px;cursor:pointer;" onclick="toggleConfirmMember('${playerName}')" title="点击确认/取消入团">`;
                             html += `<div style="display:flex;align-items:center;gap:6px;">`;
                             html += `<span style="width:6px;height:6px;border-radius:50%;background:${bgColor};flex-shrink:0;"></span>`;
                             html += `<span style="font-weight:500;color:#f3f4f6;">${playerName}</span>${benchBadge}`;
                             html += `</div></td>`;
                             html += `<td style="padding:6px 6px;color:#6ee7b7;">${pos || '<span style="color:#4b5563;">—</span>'}</td>`;
                             html += `<td style="padding:6px 6px;color:#fcd34d;white-space:normal;word-wrap:break-word;line-height:1.5;">${skillsDisplay || '<span style="color:#4b5563;">—</span>'}</td>`;
+                            html += `<td style="padding:6px 6px;text-align:center;">${confirmCheck}</td>`;
                             html += `</tr>`;
                         } else {
                             html += `<tr style="border-bottom:1px solid #1f2937;">`;
                             html += `<td style="padding:6px 6px;color:#4b5563;">— 空位 —</td>`;
                             html += `<td style="padding:6px 6px;color:#4b5563;">—</td>`;
                             html += `<td style="padding:6px 6px;color:#4b5563;">—</td>`;
+                            html += `<td style="padding:6px 6px;color:#4b5563;text-align:center;">—</td>`;
                             html += `</tr>`;
                         }
                     }
@@ -10170,6 +10203,9 @@
         <div class="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-700 flex-shrink-0">
             <h3 class="text-lg font-bold text-white"><i class="fas fa-image mr-2 text-indigo-400"></i>排表图片预览</h3>
             <div class="flex items-center gap-3">
+                <button onclick="clearAllConfirmedMembers()" class="px-4 py-1.5 rounded-lg bg-orange-600 text-white text-sm hover:bg-orange-700" title="清空所有入团确认标记">
+                    <i class="fas fa-eraser mr-1"></i>清空确认
+                </button>
                 <button onclick="downloadTeamImage()" class="px-4 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700">
                     <i class="fas fa-download mr-1"></i>下载PNG
                 </button>

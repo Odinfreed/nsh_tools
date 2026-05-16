@@ -78,10 +78,10 @@
             font-family: 'Noto Sans SC', sans-serif;
             background: var(--ink-black);
             color: #e0e0e0;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow: hidden;
             position: relative;
             scrollbar-width: thin;
             scrollbar-color: #667eea rgba(30, 41, 59, 0.3);
@@ -140,11 +140,13 @@
         .main-container {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
+            max-height: 100vh;
             margin: 0;
             background: linear-gradient(145deg, rgba(26, 26, 26, 0.95) 0%, rgba(13, 13, 13, 0.98) 100%);
             border: 1px solid var(--ink-gray);
             position: relative;
+            overflow: hidden;
         }
         
         /* 头部样式 */
@@ -190,6 +192,7 @@
             padding: 15px;
             gap: 15px;
             overflow: hidden;
+            min-height: 0;
         }
 
         /* 左侧面板 - 控制面板 */
@@ -199,12 +202,16 @@
             flex-direction: column;
             gap: 15px;
             flex-shrink: 0;
+            min-height: 0;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #667eea rgba(30, 41, 59, 0.5);
         }
+        .left-panel > * {
+            flex-shrink: 0;
+        }
         .left-panel::-webkit-scrollbar {
-            width: 4px;
+            width: 5px;
         }
         .left-panel::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.3);
@@ -222,7 +229,24 @@
             flex-direction: column;
             gap: 15px;
             min-width: 600px;
+            min-height: 0;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea rgba(30, 41, 59, 0.5);
+        }
+        .center-panel > * {
+            flex-shrink: 0;
+        }
+        .center-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+        .center-panel::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 3px;
+        }
+        .center-panel::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
         }
 
         /* 右侧面板 - 结果面板 */
@@ -232,12 +256,16 @@
             flex-direction: column;
             gap: 15px;
             flex-shrink: 0;
+            min-height: 0;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #667eea rgba(30, 41, 59, 0.5);
         }
+        .right-panel > * {
+            flex-shrink: 0;
+        }
         .right-panel::-webkit-scrollbar {
-            width: 4px;
+            width: 5px;
         }
         .right-panel::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.3);
@@ -543,11 +571,6 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #7c8de0;
-        }
-        
-        .scrollable-content {
-            max-height: none;
-            overflow-y: visible;
         }
         
         .scrollable-content::-webkit-scrollbar {
@@ -936,6 +959,11 @@
             text-align: center;
         }
     </style>
+    <script src="xg_lazy_crypto.js" defer></script>
+    <script src="xg_lazy_relay.js" defer></script>
+    <script src="xg_lazy_smartgroup.js" defer></script>
+    <script src="xg_lazy_stats.js" defer></script>
+
 </head>
 <body>
     <!-- 扫描线 -->
@@ -1162,7 +1190,7 @@
             <!-- 中间面板 -->
             <div class="center-panel">
                 <!-- 数据统计卡片 -->
-                <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="card" style="flex: 1; display: flex; flex-direction: column; overflow-y: scroll;">
                     <div class="card-header">
                         <div class="tabs">
                             <div class="tab active" onclick="switchTab('team', this)">智能分团</div>
@@ -1761,7 +1789,15 @@
                                                 <button type="button" onclick="document.getElementById('guildMemberExcelImportFile').click()" class="w-8 h-8 flex items-center justify-center rounded bg-orange-600 text-white text-xs hover:bg-orange-700" title="从Excel导入成员">
                                                     <i class="fas fa-file-import"></i>
                                                 </button>
-                                                <button type="button" onclick="clearGuildMembers()" class="w-8 h-8 flex items-center justify-center rounded bg-red-600 text-white text-xs hover:bg-red-700" title="清空本帮成员">
+                                                <button type="button"
+                                                    onclick="clearGuildMembers()"
+                                                    onmousedown="startClearLongPress(event, 'main')"
+                                                    onmouseup="cancelClearLongPress(event)"
+                                                    onmouseleave="cancelClearLongPress(event)"
+                                                    ontouchstart="startClearLongPress(event, 'main')"
+                                                    ontouchend="cancelClearLongPress(event)"
+                                                    class="w-8 h-8 flex items-center justify-center rounded bg-red-600 text-white text-xs hover:bg-red-700"
+                                                    title="单击清空本帮，长按批量筛选删除">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                                 <input type="file" id="guildMemberImportFile" class="hidden" accept=".fdh,.json" onchange="handleGuildMemberImport(event)">
@@ -1847,7 +1883,15 @@
                                                 </div>
                                                 <div class="flex gap-2">
                                                     <input type="text" id="subGuildMemberSearchInput" placeholder="搜索二帮成员..." class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm" oninput="renderSubGuildList()">
-                                                    <button type="button" onclick="clearSubGuildMembers()" class="px-3 py-2 bg-red-600 rounded text-white text-sm" title="清空二帮成员">
+                                                    <button type="button"
+                                                        onclick="clearSubGuildMembers()"
+                                                        onmousedown="startClearLongPress(event, 'side')"
+                                                        onmouseup="cancelClearLongPress(event)"
+                                                        onmouseleave="cancelClearLongPress(event)"
+                                                        ontouchstart="startClearLongPress(event, 'side')"
+                                                        ontouchend="cancelClearLongPress(event)"
+                                                        class="px-3 py-2 bg-red-600 rounded text-white text-sm"
+                                                        title="单击清空，长按批量筛选删除">
                                                         <i class="fas fa-trash-alt mr-1"></i>清空
                                                     </button>
                                                 </div>
@@ -1865,6 +1909,22 @@
                     </div>
             </div>
                 </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
             </div>
 
         <!-- 页脚 -->
@@ -1995,6 +2055,17 @@
         
 
     </div>
+
+    <script>
+        // 修复 right-panel 嵌套问题
+        (function() {
+            const rightPanel = document.querySelector('.right-panel');
+            const contentWrapper = document.querySelector('.content-wrapper');
+            if (rightPanel && contentWrapper && rightPanel.parentElement !== contentWrapper) {
+                contentWrapper.appendChild(rightPanel);
+            }
+        })();
+    </script>
 
     <script>
         // ==================== JavaScript 功能代码（完全保持不变） ====================
@@ -4993,11 +5064,11 @@
             // 初始化数据源管理器
             initDataSourceManager();
             
-            // 初始化接龙名单系统
-            initRelaySystem();
-            
-            // 初始化统计面板
-            initStatisticsPanel();
+            // 延迟初始化非首屏模块，避免阻塞首屏渲染
+            setTimeout(() => {
+                if (typeof initRelaySystem === 'function') initRelaySystem();
+                if (typeof initStatisticsPanel === 'function') initStatisticsPanel();
+            }, 0);
             
             // 从localStorage加载保存的权重配置
             try {
@@ -6509,6 +6580,133 @@
             saveGuildMembers();
             renderSubGuildList();
             renderMemberPool();
+        }
+
+        // ========== 批量删除成员（长按清空按钮） ==========
+        let batchDeleteTarget = null;
+        let clearLongPressTimer = null;
+
+        function startClearLongPress(event, target) {
+            if (event.button === 2) return;
+            cancelClearLongPress();
+            clearLongPressTimer = setTimeout(() => {
+                clearLongPressTimer = null;
+                openBatchDeleteModal(target);
+            }, 800);
+        }
+
+        function cancelClearLongPress(event) {
+            if (clearLongPressTimer) {
+                clearTimeout(clearLongPressTimer);
+                clearLongPressTimer = null;
+            }
+        }
+
+        function openBatchDeleteModal(target) {
+            batchDeleteTarget = target;
+            const modal = document.getElementById('batchDeleteModal');
+            const title = document.getElementById('batchDeleteTitle');
+            const search = document.getElementById('batchDeleteSearch');
+            if (!modal || !title) return;
+
+            let label;
+            if (target === 'main') {
+                label = '本帮';
+            } else {
+                label = multiGuildEnabled ? '二帮' : '俱乐部';
+            }
+
+            title.textContent = '批量删除' + label + '成员';
+            if (search) search.value = '';
+            modal.classList.remove('hidden');
+            renderBatchDeleteList();
+        }
+
+        function closeBatchDeleteModal() {
+            const modal = document.getElementById('batchDeleteModal');
+            if (modal) modal.classList.add('hidden');
+            batchDeleteTarget = null;
+        }
+
+        function getBatchDeleteTargetGuild() {
+            if (batchDeleteTarget === 'main') return 'main';
+            return getSideGuildType();
+        }
+
+        function renderBatchDeleteList() {
+            const container = document.getElementById('batchDeleteList');
+            const search = document.getElementById('batchDeleteSearch')?.value.toLowerCase() || '';
+            const targetGuild = getBatchDeleteTargetGuild();
+            if (!container || !targetGuild) return;
+
+            let list = guildMembers.filter(m => m.guild === targetGuild && !m.deleted);
+            if (search) {
+                list = list.filter(m => m.name.toLowerCase().includes(search));
+            }
+
+            if (list.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 py-8 text-sm">暂无成员</div>';
+                updateBatchDeleteCount();
+                return;
+            }
+
+            container.innerHTML = list.map((m) => {
+                const originalIdx = guildMembers.indexOf(m);
+                return `
+                    <div class="flex items-center gap-3 px-3 py-2 border-b border-gray-700/50 hover:bg-gray-700/30">
+                        <input type="checkbox" class="batch-delete-checkbox w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-600" data-idx="${originalIdx}" onchange="updateBatchDeleteCount()">
+                        <span class="text-sm text-white flex-1">${m.name}</span>
+                        <span class="text-xs text-gray-400 w-16">${m.profession1 || '-'}</span>
+                        <span class="text-xs text-gray-400 w-16">${m.profession2 || '-'}</span>
+                        <span class="text-xs text-gray-400 w-12">${m.equipType || '-'}</span>
+                    </div>
+                `;
+            }).join('');
+            updateBatchDeleteCount();
+        }
+
+        function filterBatchDeleteList() {
+            renderBatchDeleteList();
+        }
+
+        function batchDeleteSelectAll() {
+            document.querySelectorAll('#batchDeleteList .batch-delete-checkbox').forEach(cb => cb.checked = true);
+            updateBatchDeleteCount();
+        }
+
+        function batchDeleteInvert() {
+            document.querySelectorAll('#batchDeleteList .batch-delete-checkbox').forEach(cb => cb.checked = !cb.checked);
+            updateBatchDeleteCount();
+        }
+
+        function updateBatchDeleteCount() {
+            const count = document.querySelectorAll('#batchDeleteList .batch-delete-checkbox:checked').length;
+            const el = document.getElementById('batchDeleteCount');
+            if (el) el.textContent = '已选 ' + count + ' 人';
+        }
+
+        function executeBatchDelete() {
+            const checkboxes = document.querySelectorAll('#batchDeleteList .batch-delete-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('请至少选择一个成员');
+                return;
+            }
+            const targetGuild = getBatchDeleteTargetGuild();
+            const label = targetGuild === 'main' ? '本帮' : (multiGuildEnabled ? '二帮' : '俱乐部');
+            if (!confirm('确定要删除选中的 ' + checkboxes.length + ' 名' + label + '成员吗？')) return;
+
+            const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.idx)).sort((a, b) => b - a);
+            indices.forEach(idx => {
+                if (guildMembers[idx]) guildMembers.splice(idx, 1);
+            });
+
+            saveGuildMembers();
+            renderGuildMemberList();
+            renderSubGuildList();
+            renderMemberPool();
+            closeBatchDeleteModal();
+
+            alert('已删除 ' + indices.length + ' 名成员');
         }
 
         function copyMainToClub() {
@@ -9957,2529 +10155,6 @@
             renderSquadList();
         }
 
-        // ==================== XG 加密模块 (v1.0.0.0) ====================
-        const XG_CRYPTO_MODULE = (function() {
-            const CRYPTO_VERSION = '1.0.0.0';
-            const SITE_INFO = '联赛智能分团系统';
-            const IRREDUCIBLE_POLY = 0x11b; // AES不可约多项式 x^8+x^4+x^3+x+1
-            const AFFINE_CONST = 0x63;
-            const CHUNK_SIZE = 256 * 1024; // 256KB
-
-            // GF(2^8) 乘法
-            function gfMul(a, b) {
-                let p = 0;
-                for (let i = 0; i < 8; i++) {
-                    if (b & 1) p ^= a;
-                    const hi = a & 0x80;
-                    a <<= 1;
-                    if (hi) a ^= 0x1b;
-                    b >>= 1;
-                }
-                return p & 0xFF;
-            }
-
-            // GF(2^8) 乘法逆元（费马小定理 a^(254)=a^(-1)）
-            function gfInv(a) {
-                if (a === 0) return 0;
-                let result = 1;
-                let base = a;
-                for (let i = 0; i < 8; i++) {
-                    if ((254 >> i) & 1) result = gfMul(result, base);
-                    base = gfMul(base, base);
-                }
-                return result;
-            }
-
-            // 仿射变换（AES标准）
-            function affineTransform(x) {
-                let y = 0;
-                for (let i = 0; i < 8; i++) {
-                    const bit = ((x >> i) & 1) ^
-                                ((x >> ((i + 4) % 8)) & 1) ^
-                                ((x >> ((i + 5) % 8)) & 1) ^
-                                ((x >> ((i + 6) % 8)) & 1) ^
-                                ((x >> ((i + 7) % 8)) & 1) ^
-                                ((AFFINE_CONST >> i) & 1);
-                    y |= (bit << i);
-                }
-                return y & 0xFF;
-            }
-
-            // 预计算 S-Box 和逆 S-Box
-            const SBOX = new Uint8Array(256);
-            const ISBOX = new Uint8Array(256);
-            (function initSBox() {
-                for (let i = 0; i < 256; i++) {
-                    const inv = gfInv(i);
-                    const sb = affineTransform(inv);
-                    SBOX[i] = sb;
-                    ISBOX[sb] = i;
-                }
-            })();
-
-            // 字符串转 UTF-8 字节数组
-            function stringToBytes(str) {
-                return new TextEncoder().encode(str);
-            }
-            function bytesToString(bytes) {
-                return new TextDecoder().decode(bytes);
-            }
-
-            // 密钥派生
-            function deriveKey(keyStr) {
-                const bytes = stringToBytes(keyStr);
-                if (bytes.length === 0) return new Uint8Array([0]);
-                return bytes;
-            }
-
-            // 单字节三轮加密
-            function encryptByte(p, keyBytes, globalIndex) {
-                let b = p;
-                const keyLen = keyBytes.length;
-                for (let round = 0; round < 3; round++) {
-                    const ki = keyBytes[(globalIndex + round) % keyLen];
-                    b = b ^ ki;                          // (一) XOR
-                    b = SBOX[b];                         // (二) S-Box
-                    b = ((b << 3) | (b >>> 5)) & 0xFF;   // (三) 循环左移3位
-                    b = (b + round + globalIndex) & 0xFF; // (四) 动态偏移
-                }
-                return b;
-            }
-
-            // 单字节三轮解密
-            function decryptByte(c, keyBytes, globalIndex) {
-                let b = c;
-                const keyLen = keyBytes.length;
-                for (let round = 2; round >= 0; round--) {
-                    b = (b - round - globalIndex) & 0xFF;       // (一) 逆向偏移
-                    b = ((b >>> 3) | (b << 5)) & 0xFF;          // (二) 循环右移3位
-                    b = ISBOX[b];                               // (三) 逆 S-Box
-                    const ki = keyBytes[(globalIndex + round) % keyLen];
-                    b = b ^ ki;                                 // (四) XOR还原
-                }
-                return b;
-            }
-
-            // Base64 编解码
-            function bytesToBase64(bytes) {
-                let binary = '';
-                const len = bytes.byteLength;
-                for (let i = 0; i < len; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                return btoa(binary);
-            }
-            function base64ToBytes(b64) {
-                const binary = atob(b64);
-                const len = binary.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-                return bytes;
-            }
-
-            // 异步分片加密（ECMAScript异步模型 + setTimeout释放主线程）
-            async function encryptAsync(plainText, keyStr) {
-                const plainBytes = stringToBytes(plainText);
-                const keyBytes = deriveKey(keyStr);
-                const totalLen = plainBytes.length;
-                const cipherBytes = new Uint8Array(totalLen);
-                let offset = 0;
-                while (offset < totalLen) {
-                    const end = Math.min(offset + CHUNK_SIZE, totalLen);
-                    for (let i = offset; i < end; i++) {
-                        cipherBytes[i] = encryptByte(plainBytes[i], keyBytes, i);
-                    }
-                    offset = end;
-                    if (offset < totalLen) {
-                        await new Promise(resolve => setTimeout(resolve, 0));
-                    }
-                }
-                return bytesToBase64(cipherBytes);
-            }
-
-            // 异步分片解密
-            async function decryptAsync(cipherBase64, keyStr) {
-                const cipherBytes = base64ToBytes(cipherBase64);
-                const keyBytes = deriveKey(keyStr);
-                const totalLen = cipherBytes.length;
-                const plainBytes = new Uint8Array(totalLen);
-                let offset = 0;
-                while (offset < totalLen) {
-                    const end = Math.min(offset + CHUNK_SIZE, totalLen);
-                    for (let i = offset; i < end; i++) {
-                        plainBytes[i] = decryptByte(cipherBytes[i], keyBytes, i);
-                    }
-                    offset = end;
-                    if (offset < totalLen) {
-                        await new Promise(resolve => setTimeout(resolve, 0));
-                    }
-                }
-                return bytesToString(plainBytes);
-            }
-
-            // MD5 哈希（用于完整性校验）
-            function md5Hex(input) {
-                const hc = '0123456789abcdef';
-                function rh(n) { let j, s = ''; for (j = 0; j <= 3; j++) s += hc.charAt((n >> (j * 8 + 4)) & 0x0F) + hc.charAt((n >> (j * 8)) & 0x0F); return s; }
-                function ad(x, y) { const l = (x & 0xFFFF) + (y & 0xFFFF), m = (x >> 16) + (y >> 16) + (l >> 16); return (m << 16) | (l & 0xFFFF); }
-                function rl(n, c) { return (n << c) | (n >>> (32 - c)); }
-                function cm(q, a, b, x, s, t) { return ad(rl(ad(ad(a, q), ad(x, t)), s), b); }
-                function ff(a, b, c, d, x, s, t) { return cm((b & c) | ((~b) & d), a, b, x, s, t); }
-                function gg(a, b, c, d, x, s, t) { return cm((b & d) | (c & (~d)), a, b, x, s, t); }
-                function hh(a, b, c, d, x, s, t) { return cm(b ^ c ^ d, a, b, x, s, t); }
-                function ii(a, b, c, d, x, s, t) { return cm(c ^ (b | (~d)), a, b, x, s, t); }
-                let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
-                let olda, oldb, oldc, oldd;
-                const txt = unescape(encodeURIComponent(input));
-                const wl = ((txt.length + 8) >> 6) + 1;
-                const w = new Array(wl * 16);
-                for (let i = 0; i < wl * 16; i++) w[i] = 0;
-                for (let i = 0; i < txt.length; i++) w[i >> 2] |= txt.charCodeAt(i) << ((i % 4) << 3);
-                w[txt.length >> 2] |= 0x80 << ((txt.length % 4) << 3);
-                w[wl * 16 - 2] = txt.length * 8;
-                for (let i = 0; i < wl * 16; i += 16) {
-                    olda = a; oldb = b; oldc = c; oldd = d;
-                    a = ff(a, b, c, d, w[i+0], 7, -680876936);
-                    d = ff(d, a, b, c, w[i+1], 12, -389564586);
-                    c = ff(c, d, a, b, w[i+2], 17, 606105819);
-                    b = ff(b, c, d, a, w[i+3], 22, -1044525330);
-                    a = ff(a, b, c, d, w[i+4], 7, -176418897);
-                    d = ff(d, a, b, c, w[i+5], 12, 1200080426);
-                    c = ff(c, d, a, b, w[i+6], 17, -1473231341);
-                    b = ff(b, c, d, a, w[i+7], 22, -45705983);
-                    a = ff(a, b, c, d, w[i+8], 7, 1770035416);
-                    d = ff(d, a, b, c, w[i+9], 12, -1958414417);
-                    c = ff(c, d, a, b, w[i+10], 17, -42063);
-                    b = ff(b, c, d, a, w[i+11], 22, -1990404162);
-                    a = ff(a, b, c, d, w[i+12], 7, 1804603682);
-                    d = ff(d, a, b, c, w[i+13], 12, -40341101);
-                    c = ff(c, d, a, b, w[i+14], 17, -1502002290);
-                    b = ff(b, c, d, a, w[i+15], 22, 1236535329);
-                    a = gg(a, b, c, d, w[i+1], 5, -165796510);
-                    d = gg(d, a, b, c, w[i+6], 9, -1069501632);
-                    c = gg(c, d, a, b, w[i+11], 14, 643717713);
-                    b = gg(b, c, d, a, w[i+0], 20, -373897302);
-                    a = gg(a, b, c, d, w[i+5], 5, -701558691);
-                    d = gg(d, a, b, c, w[i+10], 9, 38016083);
-                    c = gg(c, d, a, b, w[i+15], 14, -660478335);
-                    b = gg(b, c, d, a, w[i+4], 20, -405537848);
-                    a = gg(a, b, c, d, w[i+9], 5, 568446438);
-                    d = gg(d, a, b, c, w[i+14], 9, -1019803690);
-                    c = gg(c, d, a, b, w[i+3], 14, -187363961);
-                    b = gg(b, c, d, a, w[i+8], 20, 1163531501);
-                    a = gg(a, b, c, d, w[i+13], 5, -1444681467);
-                    d = gg(d, a, b, c, w[i+2], 9, -51403784);
-                    c = gg(c, d, a, b, w[i+7], 14, 1735328473);
-                    b = gg(b, c, d, a, w[i+12], 20, -1926607734);
-                    a = hh(a, b, c, d, w[i+5], 4, -378558);
-                    d = hh(d, a, b, c, w[i+8], 11, -2022574463);
-                    c = hh(c, d, a, b, w[i+11], 16, 1839030562);
-                    b = hh(b, c, d, a, w[i+14], 23, -35309556);
-                    a = hh(a, b, c, d, w[i+1], 4, -1530992060);
-                    d = hh(d, a, b, c, w[i+4], 11, 1272893353);
-                    c = hh(c, d, a, b, w[i+7], 16, -155497632);
-                    b = hh(b, c, d, a, w[i+10], 23, -1094730640);
-                    a = hh(a, b, c, d, w[i+13], 4, 681279174);
-                    d = hh(d, a, b, c, w[i+0], 11, -358537222);
-                    c = hh(c, d, a, b, w[i+3], 16, -722521979);
-                    b = hh(b, c, d, a, w[i+6], 23, 76029189);
-                    a = hh(a, b, c, d, w[i+9], 4, -640364487);
-                    d = hh(d, a, b, c, w[i+12], 11, -421815835);
-                    c = hh(c, d, a, b, w[i+15], 16, 530742520);
-                    b = hh(b, c, d, a, w[i+2], 23, -995338651);
-                    a = ii(a, b, c, d, w[i+0], 6, -198630844);
-                    d = ii(d, a, b, c, w[i+7], 10, 1126891415);
-                    c = ii(c, d, a, b, w[i+14], 15, -1416354905);
-                    b = ii(b, c, d, a, w[i+5], 21, -57434055);
-                    a = ii(a, b, c, d, w[i+12], 6, 1700485571);
-                    d = ii(d, a, b, c, w[i+3], 10, -1894986606);
-                    c = ii(c, d, a, b, w[i+10], 15, -1051523);
-                    b = ii(b, c, d, a, w[i+1], 21, -2054922799);
-                    a = ii(a, b, c, d, w[i+8], 6, 1873313359);
-                    d = ii(d, a, b, c, w[i+15], 10, -30611744);
-                    c = ii(c, d, a, b, w[i+6], 15, -1560198380);
-                    b = ii(b, c, d, a, w[i+13], 21, 1309151649);
-                    a = ii(a, b, c, d, w[i+4], 6, -145523070);
-                    d = ii(d, a, b, c, w[i+11], 10, -1120210379);
-                    c = ii(c, d, a, b, w[i+2], 15, 718787259);
-                    b = ii(b, c, d, a, w[i+9], 21, -343485551);
-                    a = ad(a, olda); b = ad(b, oldb); c = ad(c, oldc); d = ad(d, oldd);
-                }
-                return rh(a) + rh(b) + rh(c) + rh(d);
-            }
-
-            // Gzip 压缩/解压（用于大文件自动压缩）
-            async function gzipString(str) {
-                const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
-                const reader = stream.getReader();
-                const chunks = [];
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                }
-                const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-                const result = new Uint8Array(totalLength);
-                let offset = 0;
-                for (const chunk of chunks) {
-                    result.set(chunk, offset);
-                    offset += chunk.length;
-                }
-                return result;
-            }
-            async function gunzipBytes(bytes) {
-                const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-                const reader = stream.getReader();
-                const chunks = [];
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                }
-                const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-                const result = new Uint8Array(totalLength);
-                let offset = 0;
-                for (const chunk of chunks) {
-                    result.set(chunk, offset);
-                    offset += chunk.length;
-                }
-                return new TextDecoder().decode(result);
-            }
-
-            // 构建头部信息（盐值+网站信息+加密模块版本号）
-            function buildHeader(moduleName) {
-                const now = Date.now();
-                return {
-                    salt: now,
-                    siteInfo: SITE_INFO,
-                    cryptoVersion: CRYPTO_VERSION,
-                    timestamp: new Date(now).toISOString(),
-                    module: moduleName || 'unknown',
-                    websiteUrl: 'https://odinfreed.github.io/nsh_tools/',
-                    githubUrl: 'https://github.com/Odinfreed/nsh_tools',
-                    starMessage: '🌟 欢迎Star和Fork本项目！',
-                    epilogue: '愿我如星君如月，夜夜流光相皎洁。\n春风若有怜花意，可否许我再少年。\n愿如星月伴流光，意气永相随。成长如星河清晰。春风怜花意，许你再少年。\nFrom：春风渡-春风渡星河'
-                };
-            }
-
-            // 导出封装：返回纯文本 FDH 格式字符串
-            async function exportEncrypted(dataObj, keyStr, moduleName) {
-                const header = buildHeader(moduleName);
-                let plainText = JSON.stringify(dataObj);
-                let isZipped = false;
-
-                // 数据过大时自动压缩（>500KB）
-                if (plainText.length > 500 * 1024 && typeof CompressionStream !== 'undefined') {
-                    const compressed = await gzipString(plainText);
-                    plainText = bytesToBase64(compressed);
-                    isZipped = true;
-                }
-
-                const payload = await encryptAsync(plainText, keyStr);
-                const hash = md5Hex(payload);
-
-                const lines = [];
-                lines.push('FDHTXT1');
-                lines.push('S:' + header.salt);
-                lines.push('SI:' + header.siteInfo);
-                lines.push('V:' + header.cryptoVersion);
-                lines.push('T:' + header.timestamp);
-                lines.push('M:' + header.module);
-                lines.push('U:' + header.websiteUrl);
-                lines.push('GH:' + header.githubUrl);
-                lines.push('MS:' + header.starMessage);
-                lines.push('H:' + hash);
-                if (isZipped) lines.push('ZIP:1');
-                lines.push('# 以下为加密数据，需通过本系统解密查看 #');
-                lines.push('---');
-                for (let i = 0; i < payload.length; i += 72) {
-                    lines.push(payload.slice(i, i + 72));
-                }
-                lines.push('---');
-                lines.push(header.epilogue);
-                lines.push(''); // 表尾寄语末尾增加一个空行
-                return lines.join('\n');
-            }
-
-            // 导入解包（支持新纯文本格式及旧版JSON对象兼容）
-            async function importEncrypted(source, keyStr) {
-                // 兼容旧版 JSON 对象格式
-                if (source && typeof source === 'object' && source._xg_crypto) {
-                    const plainText = await decryptAsync(source.payload, keyStr);
-                    return JSON.parse(plainText);
-                }
-                if (typeof source !== 'string') {
-                    throw new Error('文件格式不正确：无法识别的数据类型');
-                }
-
-                const text = source.trim();
-                if (!text.startsWith('FDHTXT1')) {
-                    throw new Error('文件格式不正确：缺少魔数标识或文件已损坏');
-                }
-
-                const lines = text.split('\n');
-                const headerMap = {};
-                let i = 1;
-                for (; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (line === '# 以下为加密数据，需通过本系统解密查看 #' || line === '---') break;
-                    if (!line) continue;
-                    const colonIdx = line.indexOf(':');
-                    if (colonIdx > 0) {
-                        headerMap[line.slice(0, colonIdx)] = line.slice(colonIdx + 1);
-                    }
-                }
-
-                // 跳过注释行和起始 ---
-                while (i < lines.length && lines[i].trim() !== '---') i++;
-                if (i >= lines.length) throw new Error('文件格式不正确：缺少密文起始标记');
-                i++; // skip ---
-
-                const payloadLines = [];
-                while (i < lines.length && lines[i].trim() !== '---') {
-                    payloadLines.push(lines[i].trim());
-                    i++;
-                }
-                const payload = payloadLines.join('');
-
-                // 校验 HASH
-                if (headerMap.H) {
-                    const actualHash = md5Hex(payload);
-                    if (actualHash !== headerMap.H) {
-                        throw new Error('文件完整性校验失败：密文可能已损坏');
-                    }
-                }
-
-                let plainText = await decryptAsync(payload, keyStr);
-
-                // 自动解压
-                if (headerMap.ZIP === '1') {
-                    if (typeof DecompressionStream === 'undefined') {
-                        throw new Error('当前浏览器不支持自动解压，请使用支持 CompressionStream 的现代浏览器');
-                    }
-                    const compressedBytes = base64ToBytes(plainText);
-                    plainText = await gunzipBytes(compressedBytes);
-                }
-
-                return JSON.parse(plainText);
-            }
-
-            return {
-                version: CRYPTO_VERSION,
-                siteInfo: SITE_INFO,
-                encryptAsync,
-                decryptAsync,
-                buildHeader,
-                exportEncrypted,
-                importEncrypted
-            };
-        })();
-
-        // 通用下载FDH加密数据文件
-        function downloadJsonFile(content, filename) {
-            const blob = new Blob([typeof content === 'string' ? content : JSON.stringify(content, null, 2)], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // 统一文件名生成器：逆水寒帮战分团系统_模块名_年_月_日_时_分_秒.fdh
-        function generateXgFilename(moduleName) {
-            const now = new Date();
-            const pad = n => String(n).padStart(2, '0');
-            const ts = `${now.getFullYear()}_${pad(now.getMonth() + 1)}_${pad(now.getDate())}_${pad(now.getHours())}_${pad(now.getMinutes())}_${pad(now.getSeconds())}`;
-            return `逆水寒帮战分团系统_${moduleName}_${ts}.fdh`;
-        }
-
-        // 辅助：转义单引号等用于内联JS字符串
-        function escapeStringForJS(s) {
-            return (s + '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        }
-
-        // 4. 数据看板
-        function updateConfigWeight(type, value) {
-            document.getElementById(`config-${type}-val`).textContent = value;
-            teamConfig.weights[type] = parseFloat(value);
-        }
-
-        function saveTeamConfig() {
-            // 保存波动计算方法
-            const methodSelect = document.getElementById('fluctuationMethod');
-            if (methodSelect) {
-                teamConfig.fluctuationMethod = methodSelect.value;
-            }
-
-            // 保存显示模式
-            const displaySelect = document.getElementById('displayMode');
-            if (displaySelect) {
-                teamConfig.displayMode = displaySelect.value;
-            }
-
-            // 更新预览
-            document.getElementById('weight-output').textContent = teamConfig.weights.output.toFixed(1);
-            document.getElementById('weight-kills').textContent = teamConfig.weights.kills.toFixed(1);
-            document.getElementById('weight-building').textContent = teamConfig.weights.building.toFixed(1);
-            document.getElementById('weight-survival').textContent = teamConfig.weights.survival.toFixed(1);
-            document.getElementById('weight-support').textContent = teamConfig.weights.support.toFixed(1);
-
-            alert('配置已保存！');
-        }
-
-        function resetTeamConfig() {
-            teamConfig = {
-                weights: { output: 1.0, kills: 1.0, building: 1.0, survival: 1.0, support: 1.0 },
-                fluctuationMethod: 'diff_ratio',
-                displayMode: 'data'
-            };
-
-            // 重置UI
-            ['output', 'kills', 'building', 'survival', 'support'].forEach(type => {
-                const slider = document.getElementById(`config-${type}`);
-                if (slider) slider.value = 1;
-                document.getElementById(`config-${type}-val`).textContent = '1.0';
-            });
-
-            const methodSelect = document.getElementById('fluctuationMethod');
-            if (methodSelect) methodSelect.value = 'diff_ratio';
-
-            const displaySelect = document.getElementById('displayMode');
-            if (displaySelect) displaySelect.value = 'data';
-
-            alert('配置已重置为默认值！');
-        }
-        
-        // 预览并导出出场率数据
-        function previewAndExportAttendance() {
-            const selectedGuild = dataSourceManager.selectedGuild;
-            if (!selectedGuild) {
-                alert('请先选择一个帮会');
-                return;
-            }
-            
-            // 从guildDataBaseline.playerStats获取数据
-            const playerStats = guildDataBaseline.playerStats;
-            const playerNames = Object.keys(playerStats);
-            
-            if (playerNames.length === 0) {
-                alert('该帮会暂无数据，请先点击"计算波动数据"');
-                return;
-            }
-            
-            // 获取总场次
-            const sessionIds = dataSourceManager.getGuildSessions(selectedGuild);
-            const totalSessions = sessionIds.length;
-            
-            if (totalSessions === 0) {
-                alert('该帮会暂无场次数据');
-                return;
-            }
-            
-            // 准备预览数据
-            let previewData = [];
-            let totalAttendance = 0;
-            
-            playerNames.forEach(playerName => {
-                const playerData = playerStats[playerName];
-                const professions = playerData.allProfessions || [];
-                
-                // BUG修复：确保即使只有一个职业也能正确获取数据
-                let mainProfession = professions[0] || '未知'; // 默认第一个职业
-                let maxSessions = 0;
-                let actualSessions = 0;
-                let maxCredibility = 0;
-                let mainFocus = '综合';
-                let firstProfessionCount = 0;  // 一职出场次数
-                let secondProfessionCount = 0; // 二职出场次数
-                
-                // 找到场次最多的职业（主要职业）
-                professions.forEach((profession, index) => {
-                    const stats = playerData[profession];
-                    if (stats && stats.sessionCount !== undefined) {
-                        // 更新最大出场次数和对应职业
-                        if (stats.sessionCount > maxSessions) {
-                            maxSessions = stats.sessionCount;
-                            mainProfession = profession;
-                        }
-                        
-                        // 更新总出场次数（所有职业合计）- 累加所有职业的出场次数
-                        actualSessions += stats.sessionCount;
-                        
-                        // 记录一职和二职的出场次数
-                        if (index === 0) {
-                            firstProfessionCount = stats.sessionCount;
-                        } else if (index === 1) {
-                            secondProfessionCount = stats.sessionCount;
-                        }
-                        
-                        // 更新最大可信度
-                        if (stats.credibility > maxCredibility) {
-                            maxCredibility = stats.credibility;
-                        }
-                        
-                        // 计算主要侧重（使用场次最多的职业的focusMetrics）
-                        if (profession === mainProfession && stats.focusMetrics) {
-                            const focuses = Object.entries(stats.focusMetrics)
-                                .filter(([_, value]) => value > 0.6)
-                                .map(([metric, _]) => {
-                                    if (metric === '对玩家伤害') return '输出';
-                                    if (metric === '对建筑伤害') return '拆塔';
-                                    if (metric === '治疗值') return '治疗';
-                                    if (metric === '助攻') return '辅助';
-                                    return '';
-                                })
-                                .filter(f => f)
-                                .join('/');
-                            mainFocus = focuses || '综合';
-                        }
-                    }
-                });
-                
-                // 如果没有获取到出场次数，尝试使用sessionCount作为备用
-                if (actualSessions === 0 && professions.length > 0) {
-                    const firstStats = playerData[professions[0]];
-                    if (firstStats) {
-                        actualSessions = firstStats.sessionCount || 0;
-                        firstProfessionCount = actualSessions; // 一职出场次数
-                        maxCredibility = firstStats.credibility || 0;
-                    }
-                }
-                
-                const attendanceRate = actualSessions > 0 ? ((actualSessions / totalSessions) * 100).toFixed(1) : '0.0';
-                const credibilityText = maxCredibility > 0 ? (maxCredibility * 100).toFixed(0) + '%' : '0%';
-                
-                previewData.push({
-                    playerName,
-                    mainProfession,
-                    actualSessions,
-                    firstProfessionCount,
-                    secondProfessionCount,
-                    attendanceRate,
-                    credibilityText,
-                    mainFocus
-                });
-                
-                totalAttendance += actualSessions;
-            });
-            
-            // 按出场次数排序（从多到少）
-            previewData.sort((a, b) => b.actualSessions - a.actualSessions);
-            
-            // 生成CSV内容（用于显示和下载）
-            let csvContent = "玩家名,职业,出场次数,一职出场次数,二职出场次数,出场率,可信度,主要侧重\n";
-            previewData.forEach(item => {
-                csvContent += `"${item.playerName}","${item.mainProfession}",${item.actualSessions},${item.firstProfessionCount},${item.secondProfessionCount},${item.attendanceRate}%,${item.credibilityText},"${item.mainFocus}"\n`;
-            });
-            
-            // 计算统计数据
-            const avgAttendance = (totalAttendance / playerNames.length).toFixed(1);
-            const fullAttendanceCount = previewData.filter(item => parseFloat(item.attendanceRate) >= 99.9).length;
-            
-            // 显示预览模态框
-            showAttendancePreview({
-                guildName: selectedGuild,
-                totalSessions,
-                totalPlayers: playerNames.length,
-                avgAttendance,
-                fullAttendanceCount,
-                previewData,
-                csvContent
-            });
-        }
-        
-        // 显示出场率预览模态框
-        function showAttendancePreview(data) {
-            // 创建或更新模态框
-            let modal = document.getElementById('attendancePreviewModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'attendancePreviewModal';
-                modal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden';
-                modal.innerHTML = `
-                    <div class="flex items-center justify-center min-h-screen p-4">
-                        <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col border border-gray-700">
-                            <!-- 头部 -->
-                            <div class="p-6 border-b border-gray-700">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h2 class="text-2xl font-bold text-white mb-2">
-                                            <i class="fas fa-eye mr-2 text-blue-400"></i>数据导出预览
-                                        </h2>
-                                        <p class="text-gray-400 text-sm">预览导出数据，确认无误后再下载</p>
-                                    </div>
-                                    <button onclick="closeAttendancePreview()" class="text-gray-400 hover:text-white text-2xl">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- 统计信息 -->
-                            <div class="p-4 bg-gray-900/50 border-b border-gray-700">
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                    <div class="text-center">
-                                        <div class="text-xl font-bold text-blue-400" id="previewTotalPlayers">-</div>
-                                        <div class="text-gray-400">总成员数</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-xl font-bold text-green-400" id="previewTotalSessions">-</div>
-                                        <div class="text-gray-400">总场次</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-xl font-bold text-yellow-400" id="previewAvgAttendance">-</div>
-                                        <div class="text-gray-400">平均出场</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-xl font-bold text-purple-400" id="previewFullAttendance">-</div>
-                                        <div class="text-gray-400">全勤人数</div>
-                                    </div>
-                                </div>
-                                <div class="mt-3 text-xs text-gray-500 text-center">
-                                    帮会：<span id="previewGuildName" class="text-gray-300">-</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 数据表格 -->
-                            <div class="flex-1 overflow-hidden flex flex-col">
-                                <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-                                    <h3 class="font-bold text-white">
-                                        <i class="fas fa-table mr-2"></i>数据预览（前50条）
-                                    </h3>
-                                    <div class="text-sm text-gray-400">
-                                        共 <span id="previewTotalRows" class="text-white">-</span> 条记录
-                                    </div>
-                                </div>
-                                <div class="flex-1 overflow-auto p-4">
-                                    <div class="bg-gray-900 rounded-lg overflow-hidden">
-                                        <table class="w-full text-sm">
-                                            <thead class="bg-gray-800 sticky top-0">
-                                                <tr class="text-left text-gray-300">
-                                                    <th class="px-3 py-2">玩家名</th>
-                                                    <th class="px-3 py-2">职业</th>
-                                                    <th class="px-3 py-2 text-center">出场次数</th>
-                                                    <th class="px-3 py-2 text-center">一职出场</th>
-                                                    <th class="px-3 py-2 text-center">二职出场</th>
-                                                    <th class="px-3 py-2 text-center">出场率</th>
-                                                    <th class="px-3 py-2 text-center">可信度</th>
-                                                    <th class="px-3 py-2">主要侧重</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="previewTableBody" class="text-gray-300">
-                                                <!-- 动态生成 -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 操作按钮 -->
-                            <div class="p-4 border-t border-gray-700 flex justify-between items-center">
-                                <div class="text-sm text-gray-400">
-                                    <i class="fas fa-info-circle mr-1"></i>
-                                    确认数据无误后再下载
-                                </div>
-                                <div class="flex gap-2">
-                                    <button onclick="closeAttendancePreview()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                                        <i class="fas fa-times mr-2"></i>取消
-                                    </button>
-                                    <button onclick="downloadAttendanceFromPreview()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                        <i class="fas fa-download mr-2"></i>确认下载
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 迷你统计 -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="mini-stat">
-                                <div class="mini-stat-value text-primary" id="guild1Members">0</div>
-                                <div class="mini-stat-label">成员</div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-stat-value text-primary" id="guild1Kills">0</div>
-                                <div class="mini-stat-label">击败</div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-stat-value text-primary" id="guild1Assists">0</div>
-                                <div class="mini-stat-label">助攻</div>
-                            </div>
-                            <div class="mini-stat">
-                                <div class="mini-stat-value text-primary" id="guild1Healing">0</div>
-                                <div class="mini-stat-label">治疗</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
-            
-            // 填充统计数据
-            document.getElementById('previewGuildName').textContent = data.guildName;
-            document.getElementById('previewTotalPlayers').textContent = data.totalPlayers;
-            document.getElementById('previewTotalSessions').textContent = data.totalSessions;
-            document.getElementById('previewAvgAttendance').textContent = data.avgAttendance;
-            document.getElementById('previewFullAttendance').textContent = data.fullAttendanceCount;
-            document.getElementById('previewTotalRows').textContent = data.previewData.length;
-            
-            // 存储数据用于下载
-            modal.dataset.csvContent = data.csvContent;
-            modal.dataset.guildName = data.guildName;
-            
-            // 生成表格（只显示前50条）
-            const tableBody = document.getElementById('previewTableBody');
-            const displayData = data.previewData.slice(0, 50);
-            
-            tableBody.innerHTML = displayData.map(item => {
-                // 出场率颜色
-                const rate = parseFloat(item.attendanceRate);
-                const rateColor = rate >= 80 ? 'text-green-400 font-bold' : 
-                                 rate >= 50 ? 'text-yellow-400' : 'text-red-400';
-                
-                // 可信度颜色
-                const cred = parseFloat(item.credibilityText);
-                const credColor = cred >= 80 ? 'text-green-400' : 
-                                 cred >= 50 ? 'text-yellow-400' : 'text-red-400';
-                
-                return `
-                    <tr class="border-b border-gray-800 hover:bg-gray-800/30">
-                        <td class="px-3 py-2">
-                            <div class="font-medium">${item.playerName}</div>
-                        </td>
-                        <td class="px-3 py-2">
-                            <span class="px-2 py-0.5 bg-gray-700 rounded text-xs">${item.mainProfession}</span>
-                        </td>
-                        <td class="px-3 py-2 text-center font-bold text-white">${item.actualSessions}</td>
-                        <td class="px-3 py-2 text-center text-gray-300">${item.firstProfessionCount || 0}</td>
-                        <td class="px-3 py-2 text-center text-gray-300">${item.secondProfessionCount || 0}</td>
-                        <td class="px-3 py-2 text-center ${rateColor}">${item.attendanceRate}%</td>
-                        <td class="px-3 py-2 text-center ${credColor}">${item.credibilityText}</td>
-                        <td class="px-3 py-2">
-                            <span class="text-gray-300">${item.mainFocus}</span>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            
-            // 如果超过50条，显示提示
-            if (data.previewData.length > 50) {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td colspan="8" class="px-3 py-3 text-center text-gray-500">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            还有 ${data.previewData.length - 50} 条记录，下载后可查看完整数据
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            // 显示模态框
-            modal.classList.remove('hidden');
-        }
-        
-        // 关闭预览模态框
-        function closeAttendancePreview() {
-            const modal = document.getElementById('attendancePreviewModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        }
-        
-        // 从预览下载数据
-        function downloadAttendanceFromPreview() {
-            const modal = document.getElementById('attendancePreviewModal');
-            if (!modal || !modal.dataset.csvContent) {
-                alert('数据异常，请重新预览');
-                return;
-            }
-            
-            const csvContent = modal.dataset.csvContent;
-            const guildName = modal.dataset.guildName;
-            
-            // 创建并下载文件
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `出场率_${guildName}_${new Date().toLocaleDateString('zh-CN')}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // 关闭预览
-            closeAttendancePreview();
-            
-            // 显示成功提示
-            alert('数据下载成功！');
-        }
-        
-        // 点击模态框背景关闭
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('attendancePreviewModal');
-            if (modal && e.target === modal) {
-                closeAttendancePreview();
-            }
-        });
-
-        // ==================== 接龙名单数据管理系统 ====================
-
-        // 全局变量存储接龙数据
-        let relayData = [];
-        let pendingRelayData = [];
-        let yxqGroups = [];
-        let memberIdMap = {};
-
-        // 初始化接龙系统
-        function initRelaySystem() {
-            // 从localStorage加载缓存数据
-            const cachedRelayData = localStorage.getItem('relayData');
-            const cachedYxqGroups = localStorage.getItem('yxqGroups');
-            const cachedMemberIdMap = localStorage.getItem('memberIdMap');
-
-            if (cachedRelayData) {
-                relayData = JSON.parse(cachedRelayData);
-                // 兼容旧数据：xg_relay_yxq_partner 可能是字符串
-                relayData.forEach(item => {
-                    if (item.xg_relay_yxq_partner && !Array.isArray(item.xg_relay_yxq_partner)) {
-                        item.xg_relay_yxq_partner = [item.xg_relay_yxq_partner];
-                    }
-                    if (!item.xg_relay_profession_sub) item.xg_relay_profession_sub = '';
-                });
-                updateRelayDataUI();
-            }
-
-            if (cachedYxqGroups) {
-                yxqGroups = JSON.parse(cachedYxqGroups);
-                // 兼容旧数据：member1/member2 转为 members 数组
-                yxqGroups.forEach(g => {
-                    if (!g.members && (g.member1 || g.member2)) {
-                        g.members = [];
-                        if (g.member1) g.members.push(g.member1);
-                        if (g.member2) g.members.push(g.member2);
-                        delete g.member1;
-                        delete g.member2;
-                    }
-                    if (!g.members) g.members = [];
-                });
-                updateYxqUI();
-            }
-
-            if (cachedMemberIdMap) {
-                memberIdMap = JSON.parse(cachedMemberIdMap);
-                updateMemberIdUpdateTable();
-            }
-        }
-
-        // 解析单行接龙数据，支持多种分隔符，支持末尾请假/替补状态
-        // 增强：支持名字与职业间无分隔符（以职业名锚定分割），如 "曲小盼玄机"
-        // 增强：支持职业后多个空格，以及缺省搭子时默认填充"无"
-        // 增强：支持 ID 中包含连字符，如 "曲小盼-玄机 无"
-        // 增强：支持职业前缀格式 "职业-名字"（如"碎梦-倾城莫离"）和职业后缀格式 "名字-职业"（如"曲小盼-玄机"）
-        // 增强：支持职业缩写（90->九灵，龙->龙吟）
-        const RELAY_PROFESSIONS = ['素问', '龙吟', '碎梦', '铁衣', '玄机', '神相', '潮光', '沧澜', '九灵', '血河', '鸿音', '惊鸿', '妙音'];
-        const PROFESSION_ALIASES = { '90': '九灵', '九0': '九灵', '龙': '龙吟' };
-
-        function parseRelayLine(line) {
-            let trimmed = line.trim();
-            if (!trimmed) return null;
-            // 去掉可选序号前缀：1. 1、 1) 1] 等
-            trimmed = trimmed.replace(/^\d+[\.\、\)\]\s]+/, '');
-            if (!trimmed) return null;
-
-            // 提取末尾状态（请假/替补）
-            let status = '';
-            const statusMatch = trimmed.match(/\s+(请假|替补)\s*$/);
-            if (statusMatch) {
-                status = statusMatch[1];
-                trimmed = trimmed.replace(/\s+(请假|替补)\s*$/, '').trim();
-            }
-
-            // 辅助：标准化职业名（含缩写映射）
-            const sortedProfessions = [...RELAY_PROFESSIONS].sort((a, b) => b.length - a.length);
-            function normalizeProfession(p) {
-                if (!p) return null;
-                const s = String(p).trim();
-                if (PROFESSION_ALIASES[s]) return PROFESSION_ALIASES[s];
-                if (s === '惊鸿' || s === '妙音') return '鸿音';
-                return RELAY_PROFESSIONS.includes(s) ? s : null;
-            }
-
-            // 辅助：提取搭子
-            function extractYxqPartners(rest) {
-                if (!rest) return [];
-                const s = String(rest).trim();
-                if (!s || s === '无' || s.toLowerCase() === 'none' || s.toLowerCase() === 'null') return [];
-                return s.split(/[,，]/).map(p => p.trim()).filter(p => p);
-            }
-
-            // 辅助：判断字符串是否是职业名
-            function isProfession(str) {
-                return normalizeProfession(str) !== null;
-            }
-
-            // ===== 核心解析 =====
-            const spaceParts = trimmed.split(/[\s\t]+/).map(p => p.trim()).filter(p => p);
-
-            // ---- 多段（有空格分隔）----
-            if (spaceParts.length >= 2) {
-                // 1) 标准格式：第二部分是职业
-                const prof = normalizeProfession(spaceParts[1]);
-                if (prof) {
-                    return {
-                        playerName: spaceParts[0],
-                        profession: prof,
-                        yxqPartners: extractYxqPartners(spaceParts.slice(2).join(' ')),
-                        status
-                    };
-                }
-
-                // 2) "职业-名字" 前缀格式：第一段以 "职业-" 或 "职业_" 开头，如 "碎梦-倾城莫离 无"
-                for (const p of sortedProfessions) {
-                    const m = spaceParts[0].match(new RegExp('^' + p + '[-_](.+)$'));
-                    if (m) {
-                        return {
-                            playerName: m[1], // 去掉职业前缀后的名字
-                            profession: normalizeProfession(p),
-                            yxqPartners: extractYxqPartners(spaceParts.slice(1).join(' ')),
-                            status
-                        };
-                    }
-                }
-
-                // 3) 第一段末尾直接含职业名（无连字符，如"雾散尽丶神相 无"），保留完整名字
-                for (const p of sortedProfessions) {
-                    const m = spaceParts[0].match(new RegExp('^(.+)' + p + '$'));
-                    if (m && m[1]) {
-                        return {
-                            playerName: spaceParts[0], // 保留完整名字
-                            profession: normalizeProfession(p),
-                            yxqPartners: extractYxqPartners(spaceParts.slice(1).join(' ')),
-                            status
-                        };
-                    }
-                }
-            }
-
-            // ---- 单段（无空格）----
-            if (spaceParts.length === 1) {
-                const text = spaceParts[0];
-
-                // 下划线分隔（如"厢鲤_素问"），保留完整ID
-                if (text.includes('_')) {
-                    const parts = text.split('_');
-                    const lastProf = normalizeProfession(parts[parts.length - 1]);
-                    if (lastProf) {
-                        return { playerName: text, profession: lastProf, yxqPartners: [], status };
-                    }
-                }
-
-                // "职业-名字" 前缀格式（如"潮光-烟婼"）→ 去掉职业前缀
-                for (const p of sortedProfessions) {
-                    const m = text.match(new RegExp('^' + p + '[-_](.+)$'));
-                    if (m) {
-                        return { playerName: m[1], profession: normalizeProfession(p), yxqPartners: [], status };
-                    }
-                }
-
-                // "名字-职业" 后缀格式（如"曲小盼-玄机"）→ 保留完整ID
-                // 前面的前缀检查已排除以职业开头的情况
-                for (const p of sortedProfessions) {
-                    const m = text.match(new RegExp('^(.+)[-_]' + p + '$'));
-                    if (m && m[1]) {
-                        return { playerName: text, profession: normalizeProfession(p), yxqPartners: [], status };
-                    }
-                }
-
-                // 末尾直接含职业名（无显式分隔符，如"雾散尽丶神相"）→ 保留完整ID
-                for (const p of sortedProfessions) {
-                    const m = text.match(new RegExp('^(.+)' + p + '$'));
-                    if (m && m[1]) {
-                        return { playerName: text, profession: normalizeProfession(p), yxqPartners: [], status };
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        // 导入接龙数据（预览模式）
-        function importRelayData() {
-            const inputText = document.getElementById('relayDataInput').value.trim();
-            if (!inputText) {
-                alert('请输入接龙名单数据');
-                return;
-            }
-
-            try {
-                const lines = inputText.split('\n');
-                const allParsed = [];
-
-                lines.forEach((line, index) => {
-                    const parsed = parseRelayLine(line);
-                    if (!parsed) return;
-                    const { playerName, profession, yxqPartners, status } = parsed;
-
-                    // 生成全局唯一ID
-                    const memberUid = generateMemberUid(playerName, profession);
-
-                    allParsed.push({
-                        xg_relay_id: index + 1,
-                        xg_relay_player_name: playerName,
-                        xg_relay_profession: profession,
-                        xg_relay_yxq_partner: yxqPartners.length > 0 ? yxqPartners : null,
-                        xg_relay_has_yxq: yxqPartners.length > 0 ? 1 : 0,
-                        xg_relay_status: status || '',
-                        member_uid: memberUid,
-                        xg_relay_index: index
-                    });
-                });
-
-                if (allParsed.length === 0) {
-                    alert('未解析到有效的接龙数据，请检查格式是否正确');
-                    return;
-                }
-
-                // 数据校验：与帮会成员比对
-                const validItems = [];
-                const invalidItems = [];
-                allParsed.forEach(item => {
-                    const member = findGuildMemberByName(item.xg_relay_player_name);
-                    if (member) {
-                        validItems.push(item);
-                    } else {
-                        invalidItems.push(item);
-                    }
-                });
-
-                // 只将通过校验的存入预览数据
-                pendingRelayData = validItems;
-
-                // 显示预览列表
-                const listContainer = document.getElementById('relayDataList');
-                listContainer.classList.remove('hidden');
-                let html = '';
-
-                // 通过校验部分
-                if (validItems.length > 0) {
-                    html += `
-                        <div class="mb-2 p-1 bg-green-900/30 border border-green-600/50 rounded text-center text-xs text-green-400">
-                            <i class="fas fa-check-circle mr-1"></i>通过校验（共 ${validItems.length} 条）
-                        </div>
-                    `;
-                    html += validItems.map(item => {
-                        const statusBadge = item.xg_relay_status
-                            ? `<span class="px-1 py-0.5 rounded text-[10px] ml-1 ${item.xg_relay_status === '请假' ? 'bg-gray-600 text-gray-300' : 'bg-yellow-600 text-white'}">${item.xg_relay_status}</span>`
-                            : '';
-                        return `
-                        <div class="flex justify-between items-center p-1 hover:bg-gray-700 rounded border-l-2 border-green-500">
-                            <span class="text-gray-300">${item.xg_relay_player_name}${statusBadge}</span>
-                            <span class="text-xs text-gray-400">${item.xg_relay_profession}</span>
-                            <span class="text-xs ${item.xg_relay_has_yxq ? 'text-green-400' : 'text-gray-500'}">
-                                ${item.xg_relay_has_yxq ? '一线' : '无'}
-                            </span>
-                        </div>
-                    `}).join('');
-                }
-
-                // 未通过校验部分
-                if (invalidItems.length > 0) {
-                    html += `
-                        <div class="mt-3 mb-2 p-1 bg-red-900/30 border border-red-600/50 rounded text-center text-xs text-red-400">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>未通过校验（共 ${invalidItems.length} 条）—— 以下成员未在帮会数据中找到，将不会导入
-                        </div>
-                    `;
-                    html += invalidItems.map(item => {
-                        const statusBadge = item.xg_relay_status
-                            ? `<span class="px-1 py-0.5 rounded text-[10px] ml-1 ${item.xg_relay_status === '请假' ? 'bg-gray-600 text-gray-300' : 'bg-yellow-600 text-white'}">${item.xg_relay_status}</span>`
-                            : '';
-                        return `
-                        <div class="flex justify-between items-center p-1 hover:bg-gray-700 rounded border-l-2 border-red-500 opacity-70">
-                            <span class="text-red-300">${item.xg_relay_player_name}${statusBadge}</span>
-                            <span class="text-xs text-gray-400">${item.xg_relay_profession}</span>
-                            <span class="text-xs text-red-400">未匹配</span>
-                        </div>
-                    `}).join('');
-                }
-
-                // 如果帮会成员为空，给出提示
-                if (guildMembers.length === 0 && invalidItems.length > 0) {
-                    html += `
-                        <div class="mt-2 p-2 bg-yellow-900/20 border border-yellow-600/30 rounded text-center text-xs text-yellow-500">
-                            <i class="fas fa-info-circle mr-1"></i>提示：当前帮会成员列表为空，请先导入帮会成员数据
-                        </div>
-                    `;
-                }
-
-                listContainer.innerHTML = html;
-
-                // 更新按钮状态
-                const confirmBtn = document.getElementById('confirmRelayBtn');
-                if (confirmBtn) {
-                    if (validItems.length > 0) {
-                        confirmBtn.disabled = false;
-                        confirmBtn.textContent = invalidItems.length > 0
-                            ? `导入通过校验的 (${validItems.length})`
-                            : `确认识别 (${validItems.length})`;
-                    } else {
-                        confirmBtn.disabled = true;
-                        confirmBtn.textContent = '无可导入数据';
-                    }
-                }
-
-            } catch (error) {
-                console.error('解析接龙数据失败:', error);
-                alert('解析接龙数据失败，请检查格式');
-            }
-        }
-
-        // 确认识别并保存接龙数据
-        function confirmRelayData() {
-            if (!pendingRelayData || pendingRelayData.length === 0) {
-                alert('没有待确认的识别数据');
-                return;
-            }
-
-            // 如果已有接龙数据，询问导入模式
-            if (relayData.length > 0) {
-                const isAppend = confirm(
-                    `当前已有 ${relayData.length} 条接龙记录。\n\n` +
-                    `点击「确定」→ 补充导入（保留原有记录，同名覆盖更新，新增追加）\n` +
-                    `点击「取消」→ 重新全局导入（清空原有记录，全部重新导入）`
-                );
-                if (isAppend) {
-                    // 补充导入：用 Map 去重，同名覆盖，保留旧数据中未更新的
-                    const mergedMap = new Map();
-                    relayData.forEach(item => mergedMap.set(item.xg_relay_player_name, item));
-                    pendingRelayData.forEach(item => mergedMap.set(item.xg_relay_player_name, item));
-                    relayData = Array.from(mergedMap.values());
-                } else {
-                    relayData = pendingRelayData;
-                }
-            } else {
-                relayData = pendingRelayData;
-            }
-            pendingRelayData = [];
-
-            // 保存到localStorage
-            localStorage.setItem('relayData', JSON.stringify(relayData));
-
-            // 同步接龙职业到帮会成员数据
-            let syncCount = 0;
-            relayData.forEach(item => {
-                const member = findGuildMemberByName(item.xg_relay_player_name);
-                if (member) {
-                    member.profession1 = item.xg_relay_profession;
-                    syncCount++;
-                }
-            });
-            if (syncCount > 0) {
-                saveGuildMembers();
-                renderGuildMemberList();
-                renderSubGuildList();
-            }
-
-            // 更新所有相关UI
-            updateRelayDataUI();
-            updateYxqMemberList();
-            autoAssignYxqGroups(); // 根据接龙数据自动成组
-            updateMemberIdUpdateTable();
-            renderMemberPool(); // 刷新成员池角标
-            refreshStatisticsPanel(); // 刷新数据看板统计
-
-            // 禁用确认识别按钮
-            const confirmBtn = document.getElementById('confirmRelayBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.textContent = '确认识别';
-            }
-
-            // 清空输入框
-            const input = document.getElementById('relayDataInput');
-            if (input) input.value = '';
-
-            console.log(`成功保存 ${relayData.length} 条接龙记录，同步职业 ${syncCount} 人`);
-        }
-
-        // 清空接龙名单数据
-        function clearRelayData() {
-            if (!confirm('确定要清空接龙名单吗？一线牵配对数据也将一并清除。')) return;
-
-            relayData = [];
-            pendingRelayData = [];
-            yxqGroups = [];
-            memberIdMap = {};
-
-            localStorage.removeItem('relayData');
-            localStorage.removeItem('yxqGroups');
-            localStorage.removeItem('memberIdMap');
-
-            updateRelayDataUI();
-            updateYxqMemberList();
-            updateYxqUI();
-            updateMemberIdUpdateTable();
-
-            const input = document.getElementById('relayDataInput');
-            if (input) input.value = '';
-
-            // 禁用确认识别按钮
-            const confirmBtn = document.getElementById('confirmRelayBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.textContent = '确认识别';
-            }
-        }
-
-        // 加载接龙文件
-        function loadRelayFile() {
-            document.getElementById('relayFileInput').click();
-        }
-
-        // 处理接龙文件
-        function handleRelayFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    document.getElementById('relayDataInput').value = e.target.result;
-                    importRelayData();
-                } catch (error) {
-                    alert('读取文件失败');
-                }
-            };
-            reader.readAsText(file);
-
-            // 清空input，允许重复选择同一文件
-            event.target.value = '';
-        }
-
-        // 生成全局唯一ID
-        function generateMemberUid(playerName, profession) {
-            // 使用简单的哈希函数生成唯一ID
-            const str = `${playerName}_${profession}`;
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return `member_${Math.abs(hash)}_${Date.now()}`;
-        }
-
-        // 更新接龙数据UI
-        function updateRelayDataUI() {
-            document.getElementById('relayCount').textContent = relayData.length;
-
-            const listContainer = document.getElementById('relayDataList');
-            if (relayData.length === 0) {
-                listContainer.classList.add('hidden');
-                return;
-            }
-
-            listContainer.classList.remove('hidden');
-            listContainer.innerHTML = relayData.map(item => `
-                <div class="flex justify-between items-center p-1 hover:bg-gray-700 rounded">
-                    <span class="text-gray-300">${item.xg_relay_player_name}</span>
-                    <span class="text-xs text-gray-400">${item.xg_relay_profession}</span>
-                    <span class="text-xs ${item.xg_relay_has_yxq ? 'text-green-400' : 'text-gray-500'}">
-                        ${item.xg_relay_has_yxq ? '一线' : '无'}
-                    </span>
-                </div>
-            `).join('');
-        }
-
-        // 更新一线牵成员列表
-        function updateYxqMemberList() {
-            if (relayData.length === 0) return;
-
-            const container = document.getElementById('yxqMemberList');
-            // 只显示有一线牵的成员，过滤掉 "无"
-            const yxqItems = relayData.filter(item => {
-                if (!item.xg_relay_has_yxq) return false;
-                const partners = Array.isArray(item.xg_relay_yxq_partner)
-                    ? item.xg_relay_yxq_partner
-                    : (item.xg_relay_yxq_partner ? [item.xg_relay_yxq_partner] : []);
-                return partners.length > 0 && partners.some(p => p && p !== '无');
-            });
-
-            if (yxqItems.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-4">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        暂无一线牵数据
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = yxqItems.map((item, index) => {
-                const partnerNames = Array.isArray(item.xg_relay_yxq_partner)
-                    ? item.xg_relay_yxq_partner.join('，')
-                    : (item.xg_relay_yxq_partner || '');
-                const partnerInfo = `<span class="text-xs text-green-400">一线: ${partnerNames}</span>`;
-
-                const groupIndex = getYxqGroupIndexByName(item.xg_relay_player_name);
-                const groupNumber = groupIndex >= 0 ? groupIndex + 1 : '';
-                const badgeColor = groupIndex >= 0 ? getYxqGroupColor(groupIndex) : '';
-                const badgeStyle = badgeColor ? `style="background-color: ${badgeColor}"` : '';
-
-                return `
-                    <div class="flex justify-between items-center p-2 hover:bg-gray-700 rounded"
-                         data-member-uid="${item.member_uid}">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs font-bold"
-                                  id="yxq-badge-${item.member_uid}" ${badgeStyle}>
-                                ${groupNumber}
-                            </span>
-                            <div class="flex flex-col">
-                                <span class="text-gray-300 text-sm">${item.xg_relay_player_name}</span>
-                                <span class="text-xs text-gray-400">${item.xg_relay_profession}</span>
-                            </div>
-                        </div>
-                        ${partnerInfo}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 一线牵配对颜色表（每对使用不同颜色）
-        const YXQ_PAIR_COLORS = [
-            '#ec4899', '#f97316', '#84cc16', '#06b6d4', '#8b5cf6',
-            '#ef4444', '#10b981', '#f59e0b', '#3b82f6', '#d946ef',
-            '#14b8a6', '#f43f5e', '#a855f7', '#eab308', '#6366f1',
-            '#e11d48', '#22c55e', '#0ea5e9', '#c2410c', '#7c3aed',
-            '#db2777', '#0891b2', '#65a30d', '#b91c1c', '#0d9488',
-            '#c026d3', '#2563eb', '#ca8a04', '#be123c', '#4d7c0f',
-            '#9333ea', '#0369a1', '#b45309', '#9f1239', '#15803d',
-            '#7e22ce', '#0c4a6e', '#a16207', '#881337', '#166534',
-            '#6b21a8', '#075985', '#854d0e', '#701a75', '#115e59',
-            '#312e81', '#701a75', '#9f1239', '#7c2d12'
-        ];
-
-        function getYxqGroupColor(groupIndex) {
-            return YXQ_PAIR_COLORS[groupIndex % YXQ_PAIR_COLORS.length] || '#ec4899';
-        }
-
-        // 获取一线牵组号
-        function getYxqGroupNumber(memberUid) {
-            for (let i = 0; i < yxqGroups.length; i++) {
-                const group = yxqGroups[i];
-                if (group.members && group.members.includes(memberUid)) {
-                    return i + 1;
-                }
-            }
-            return null;
-        }
-
-        // ================== 玩家名字模糊匹配工具 ==================
-        function normalizePlayerName(name) {
-            if (!name) return '';
-            return String(name)
-                .replace(/[丶丿灬゛°っゃゅょー·•丨卩乄彡巛氵艹冫丬亻忄讠礻衤钅饣丷\s]/g, '')
-                .trim();
-        }
-
-        function findRelayByPlayerName(playerName) {
-            let item = relayData.find(r => r.xg_relay_player_name === playerName);
-            if (item) return item;
-            const norm = normalizePlayerName(playerName);
-            return relayData.find(r => normalizePlayerName(r.xg_relay_player_name) === norm);
-        }
-
-        function findGuildMemberByName(name) {
-            let m = guildMembers.find(m => m.name === name);
-            if (m) return m;
-            const norm = normalizePlayerName(name);
-            return guildMembers.find(m => normalizePlayerName(m.name) === norm);
-        }
-        // ================== 玩家名字模糊匹配工具结束 ==================
-
-        // 获取玩家在 yxqGroups 中的组索引
-        function getYxqGroupIndexByName(playerName) {
-            const item = findRelayByPlayerName(playerName);
-            if (!item) return -1;
-            for (let i = 0; i < yxqGroups.length; i++) {
-                const group = yxqGroups[i];
-                if (group.members && group.members.includes(item.member_uid)) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        // 获取玩家的一线牵搭子名字（多人用逗号分隔）
-        function getYxqPartnerName(playerName) {
-            const item = findRelayByPlayerName(playerName);
-            if (!item) return null;
-
-            const directPartners = new Set();
-
-            // 该玩家自己声明的搭子（支持多搭子）
-            const selfPartners = Array.isArray(item.xg_relay_yxq_partner)
-                ? item.xg_relay_yxq_partner
-                : (item.xg_relay_yxq_partner ? [item.xg_relay_yxq_partner] : []);
-            selfPartners.forEach(p => { if (p && p !== '无') directPartners.add(p); });
-
-            // 反向查找：谁声明了该玩家为搭子（支持多对一）
-            const normPlayerName = normalizePlayerName(playerName);
-            relayData.forEach(r => {
-                if (normalizePlayerName(r.xg_relay_player_name) === normPlayerName) return;
-                const othersPartners = Array.isArray(r.xg_relay_yxq_partner)
-                    ? r.xg_relay_yxq_partner
-                    : (r.xg_relay_yxq_partner ? [r.xg_relay_yxq_partner] : []);
-                if (othersPartners.some(op => normalizePlayerName(op) === normPlayerName)) {
-                    directPartners.add(r.xg_relay_player_name);
-                }
-            });
-
-            return directPartners.size > 0 ? Array.from(directPartners).join('，') : null;
-        }
-
-        // 检查玩家是否有一线牵关系
-        function hasYxqRelation(playerName) {
-            return !!getYxqPartnerName(playerName);
-        }
-
-        // 切换一线牵选择
-        function toggleYxqSelection(memberUid) {
-            const relayItem = relayData.find(item => item.member_uid === memberUid);
-            if (!relayItem || relayItem.xg_relay_has_yxq === 0) {
-                alert('该成员没有一线牵');
-                return;
-            }
-
-            // 查找当前成员是否已在某个组中
-            let currentGroupIndex = -1;
-            for (let i = 0; i < yxqGroups.length; i++) {
-                if (yxqGroups[i].members && yxqGroups[i].members.includes(memberUid)) {
-                    currentGroupIndex = i;
-                    break;
-                }
-            }
-
-            if (currentGroupIndex !== -1) {
-                // 从组中移除
-                const group = yxqGroups[currentGroupIndex];
-                group.members = group.members.filter(uid => uid !== memberUid);
-                if (group.members.length < 2) {
-                    yxqGroups.splice(currentGroupIndex, 1);
-                }
-            } else {
-                // 查找是否有只有1人的组（可继续加入）
-                let availableGroupIndex = -1;
-                for (let i = 0; i < yxqGroups.length; i++) {
-                    if (yxqGroups[i].members && yxqGroups[i].members.length === 1) {
-                        availableGroupIndex = i;
-                        break;
-                    }
-                }
-
-                if (availableGroupIndex === -1) {
-                    yxqGroups.push({
-                        members: [memberUid],
-                        xg_yxq_group_id: yxqGroups.length + 1
-                    });
-                } else {
-                    yxqGroups[availableGroupIndex].members.push(memberUid);
-                }
-            }
-
-            updateYxqUI();
-            localStorage.setItem('yxqGroups', JSON.stringify(yxqGroups));
-            renderMemberPool();
-        }
-
-        // 更新一线牵UI
-        function updateYxqUI() {
-            // 更新组数显示（成员数>=2的组才算有效）
-            const validGroups = yxqGroups.filter(g => g.members && g.members.length >= 2).length;
-            document.getElementById('yxqGroupCount').textContent = `${validGroups}组`;
-
-            // 更新所有徽章（每对使用不同颜色）
-            relayData.forEach(item => {
-                const badge = document.getElementById(`yxq-badge-${item.member_uid}`);
-                if (badge) {
-                    const groupIndex = getYxqGroupIndexByName(item.xg_relay_player_name);
-                    const groupNumber = groupIndex >= 0 ? groupIndex + 1 : null;
-                    const color = groupIndex >= 0 ? getYxqGroupColor(groupIndex) : null;
-                    badge.textContent = groupNumber || '';
-                    if (groupNumber) {
-                        badge.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold';
-                        badge.style.backgroundColor = color;
-                    } else {
-                        badge.className = 'w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs font-bold';
-                        badge.style.backgroundColor = '';
-                    }
-                }
-            });
-        }
-
-        // 根据接龙数据自动分配一线牵组
-        function autoAssignYxqGroups() {
-            yxqGroups = [];
-            const assignedUids = new Set();
-            let groupId = 1;
-
-            // 构建名字到 uid 的映射
-            const nameToUid = {};
-            relayData.forEach(item => {
-                nameToUid[item.xg_relay_player_name] = item.member_uid;
-            });
-
-            relayData.forEach(item => {
-                if (assignedUids.has(item.member_uid)) return;
-                const partners = Array.isArray(item.xg_relay_yxq_partner) ? item.xg_relay_yxq_partner : (item.xg_relay_yxq_partner ? [item.xg_relay_yxq_partner] : []);
-                if (partners.length === 0) return;
-
-                // BFS 收集整个连通组
-                const groupUids = new Set([item.member_uid]);
-                const queue = [item.member_uid];
-                const visited = new Set([item.member_uid]);
-
-                while (queue.length > 0) {
-                    const currentUid = queue.shift();
-                    const currentItem = relayData.find(r => r.member_uid === currentUid);
-                    if (!currentItem) continue;
-
-                    // 从当前成员的搭子列表向外扩展
-                    const currentPartners = Array.isArray(currentItem.xg_relay_yxq_partner)
-                        ? currentItem.xg_relay_yxq_partner
-                        : (currentItem.xg_relay_yxq_partner ? [currentItem.xg_relay_yxq_partner] : []);
-                    currentPartners.forEach(pName => {
-                        const partnerItem = findRelayByPlayerName(pName);
-                        if (partnerItem && !visited.has(partnerItem.member_uid)) {
-                            visited.add(partnerItem.member_uid);
-                            groupUids.add(partnerItem.member_uid);
-                            queue.push(partnerItem.member_uid);
-                        }
-                    });
-
-                    // 反向查找：谁的一线牵包含了当前成员
-                    relayData.forEach(other => {
-                        if (other.member_uid === currentUid) return;
-                        const otherPartners = Array.isArray(other.xg_relay_yxq_partner)
-                            ? other.xg_relay_yxq_partner
-                            : (other.xg_relay_yxq_partner ? [other.xg_relay_yxq_partner] : []);
-                        if (otherPartners.includes(currentItem.xg_relay_player_name)) {
-                            if (!visited.has(other.member_uid)) {
-                                visited.add(other.member_uid);
-                                groupUids.add(other.member_uid);
-                                queue.push(other.member_uid);
-                            }
-                        }
-                    });
-                }
-
-                if (groupUids.size >= 2) {
-                    yxqGroups.push({
-                        members: Array.from(groupUids),
-                        xg_yxq_group_id: groupId++
-                    });
-                    groupUids.forEach(uid => assignedUids.add(uid));
-                }
-            });
-
-            updateYxqUI();
-            localStorage.setItem('yxqGroups', JSON.stringify(yxqGroups));
-        }
-
-        // 清空一线牵配对
-        function clearYxqGroups() {
-            if (!confirm('确定要清空所有一线牵配对吗？')) return;
-
-            yxqGroups = [];
-            updateYxqUI();
-            localStorage.removeItem('yxqGroups');
-        }
-
-        // 保存一线牵数据
-        function saveYxqData() {
-            localStorage.setItem('yxqGroups', JSON.stringify(yxqGroups));
-            alert('一线牵数据已保存到缓存');
-        }
-
-        // 更新成员ID更新表格（模块已移除，保留函数避免报错）
-        function updateMemberIdUpdateTable() {
-            const container = document.getElementById('memberIdUpdateTable');
-            if (!container) return;
-            if (relayData.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-4">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        请先导入接龙名单
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <table class="w-full text-xs">
-                    <thead class="bg-gray-700 sticky top-0">
-                        <tr>
-                            <th class="px-2 py-1 text-left">当前ID</th>
-                            <th class="px-2 py-1 text-left">职业</th>
-                            <th class="px-2 py-1 text-center">ID变更</th>
-                            <th class="px-2 py-1 text-left">新ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${relayData.map(item => {
-                            const mapKey = item.xg_relay_player_name;
-                            const mapData = memberIdMap[mapKey] || {
-                                hasChanged: false,
-                                newId: item.xg_relay_player_name
-                            };
-
-                            return `
-                                <tr class="border-b border-gray-700 hover:bg-gray-700">
-                                    <td class="px-2 py-1 text-gray-300">${item.xg_relay_player_name}</td>
-                                    <td class="px-2 py-1 text-gray-400">${item.xg_relay_profession}</td>
-                                    <td class="px-2 py-1 text-center">
-                                        <input type="checkbox" 
-                                               ${mapData.hasChanged ? 'checked' : ''} 
-                                               onchange="toggleIdChange('${mapKey}')"
-                                               class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                                    </td>
-                                    <td class="px-2 py-1">
-                                        <input type="text" 
-                                               value="${mapData.newId}" 
-                                               onblur="updateNewId('${mapKey}', this.value)"
-                                               class="w-full px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-white text-xs ${mapData.hasChanged ? '' : 'opacity-50'}"
-                                               ${mapData.hasChanged ? '' : 'disabled'}>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        // 切换ID变更状态
-        function toggleIdChange(playerName) {
-            if (!memberIdMap[playerName]) {
-                memberIdMap[playerName] = {
-                    hasChanged: false,
-                    newId: playerName,
-                    oldId: playerName,
-                    xg_map_id: generateMemberUid(playerName, 'map')
-                };
-            }
-
-            memberIdMap[playerName].hasChanged = !memberIdMap[playerName].hasChanged;
-            updateMemberIdUpdateTable();
-        }
-
-        // 更新新ID
-        function updateNewId(playerName, newId) {
-            if (!memberIdMap[playerName]) {
-                memberIdMap[playerName] = {
-                    hasChanged: false,
-                    newId: playerName,
-                    oldId: playerName,
-                    xg_map_id: generateMemberUid(playerName, 'map')
-                };
-            }
-
-            memberIdMap[playerName].newId = newId;
-        }
-
-        // 标记所有ID为已更新
-        function markAllIdAsUpdated() {
-            relayData.forEach(item => {
-                const playerName = item.xg_relay_player_name;
-                if (!memberIdMap[playerName]) {
-                    memberIdMap[playerName] = {
-                        hasChanged: false,
-                        newId: playerName,
-                        oldId: playerName,
-                        xg_map_id: generateMemberUid(playerName, 'map')
-                    };
-                }
-                memberIdMap[playerName].hasChanged = true;
-            });
-            updateMemberIdUpdateTable();
-        }
-
-        // 保存ID映射数据
-        function saveIdMapData() {
-            localStorage.setItem('memberIdMap', JSON.stringify(memberIdMap));
-            alert('ID映射数据已保存到缓存');
-        }
-
-        // 获取用于智能分团的筛选后数据
-        function getFilteredDataForSmartGrouping() {
-            if (relayData.length === 0) {
-                alert('请先导入接龙名单');
-                return null;
-            }
-
-            const selectedGuild = dataSourceManager.selectedGuild;
-            if (!selectedGuild) {
-                alert('请先选择帮会');
-                return null;
-            }
-
-            const guildData = dataSourceManager.getGuildData(selectedGuild);
-            if (!guildData || guildData.length === 0) {
-                alert('当前帮会没有数据');
-                return null;
-            }
-
-            // 基于接龙名单筛选数据
-            const relayPlayerNames = relayData.map(item => normalizePlayerName(item.xg_relay_player_name));
-            const filteredData = guildData.filter(player => {
-                const playerName = player['玩家名字'];
-                return relayPlayerNames.includes(normalizePlayerName(playerName));
-            });
-
-            // 添加全局唯一ID
-            const dataWithUid = filteredData.map(player => {
-                const playerName = player['玩家名字'];
-                const profession = player['职业'];
-                
-                // 查找对应的接龙数据以获取member_uid
-                const relayItem = findRelayByPlayerName(playerName);
-
-                return {
-                    ...player,
-                    member_uid: relayItem ? relayItem.member_uid : generateMemberUid(playerName, profession),
-                    xg_bz_source: 'battle_data',
-                    xg_bz_import_time: new Date().toISOString()
-                };
-            });
-
-            return dataWithUid;
-        }
-
-        // 导出数据（带前缀映射，FDH加密格式）
-        async function exportDataWithPrefixMapping() {
-            if (relayData.length === 0) {
-                alert('没有数据可导出');
-                return;
-            }
-
-            const exportData = {
-                relay_data: relayData,
-                yxq_groups: yxqGroups,
-                member_id_map: memberIdMap,
-                export_time: new Date().toISOString(),
-                version: '1.0'
-            };
-
-            const encrypted = await XG_CRYPTO_MODULE.exportEncrypted(exportData, 'xg_guild_crypto_key', 'relay-data');
-            downloadJsonFile(encrypted, generateXgFilename('接龙数据'));
-        }
-
-        // 导入数据（带前缀映射，支持FDH加密及旧格式兼容）
-        async function importDataWithPrefixMapping(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const content = e.target.result;
-                    let data;
-                    if (content.trim().startsWith('FDHTXT1')) {
-                        data = await XG_CRYPTO_MODULE.importEncrypted(content, 'xg_guild_crypto_key');
-                    } else {
-                        const fileObj = JSON.parse(content);
-                        if (fileObj._xg_crypto) {
-                            data = await XG_CRYPTO_MODULE.importEncrypted(fileObj, 'xg_guild_crypto_key');
-                        } else {
-                            data = fileObj; // 兼容旧格式明文
-                        }
-                    }
-                    
-                    relayData = data.relay_data || [];
-                    yxqGroups = data.yxq_groups || [];
-                    memberIdMap = data.member_id_map || {};
-
-                    updateRelayDataUI();
-                    updateYxqUI();
-                    updateMemberIdUpdateTable();
-
-                    localStorage.setItem('relayData', JSON.stringify(relayData));
-                    localStorage.setItem('yxqGroups', JSON.stringify(yxqGroups));
-                    localStorage.setItem('memberIdMap', JSON.stringify(memberIdMap));
-
-                    alert('数据导入成功');
-                } catch (error) {
-                    console.error('导入失败:', error);
-                    alert('导入失败：' + (error.message || '文件格式错误'));
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // 更新成员池筛选
-        function updateMemberPoolFilter() {
-            // 更新接龙筛选人数显示
-            if (relayData.length > 0) {
-                document.getElementById('relayFilterCount').textContent = relayData.length;
-            }
-
-            // 重新渲染成员池与团内排表（确保底色实时刷新）
-            renderMemberPool();
-            renderAllTeams();
-            updateTeamAnalysisTable();
-            updateTeamRightPanel();
-        }
-
-        // ==================== 智能分团系统 ====================
-        
-        let smartGroupResult = null;
-        
-        // 初始化智能分团团队选择
-        function initSmartGroupTeamSelect() {
-            const select = document.getElementById('smartGroupTargetTeam');
-            if (!select) return;
-            
-            const teams = Object.keys(teamStructure);
-            
-            select.innerHTML = '<option value="">选择团队...</option>' +
-                teams.map(team => `<option value="${team}">${team}</option>`).join('');
-        }
-        
-        // 更新智能分团配置（当选择团队时）
-        function updateSmartGroupConfig() {
-            const teamName = document.getElementById('smartGroupTargetTeam').value;
-            const professionList = document.getElementById('professionConfigList');
-            
-            if (!teamName || !teamStructure[teamName]) {
-                professionList.innerHTML = '<p class="text-gray-400">请选择团队后配置</p>';
-                return;
-            }
-            
-            const groups = teamStructure[teamName];
-            const professions = ['铁衣', '血河', '素问', '九灵', '龙吟', '碎梦', '神相', '玄机', '潮光', '沧澜'];
-            
-            professionList.innerHTML = groups.map((group, idx) => `
-                <div class="border border-gray-600 rounded p-2 mb-2">
-                    <h5 class="font-bold text-sm text-blue-400 mb-2">${group.name} (${group.limit}人)</h5>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        ${professions.map(prof => `
-                            <div class="flex items-center justify-between">
-                                <span>${prof}</span>
-                                <input type="number" min="0" max="${group.limit}" value="0" 
-                                       class="w-12 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-white"
-                                       id="prof-config-${idx}-${prof}">
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // 开始智能分团
-        function startSmartGrouping() {
-            const teamName = document.getElementById('smartGroupTargetTeam').value;
-            const strategy = document.getElementById('smartGroupStrategy').value;
-            const considerYxq = document.getElementById('smartGroupConsiderYxq').checked;
-            const filterByRelay = document.getElementById('smartGroupFilterByRelay').checked;
-            
-            if (!teamName || !teamStructure[teamName]) {
-                alert('请先选择要分配的团队');
-                return;
-            }
-            
-            // 获取可用成员
-            const selectedGuild = dataSourceManager.selectedGuild;
-            let players = selectedGuild ? dataSourceManager.getGuildData(selectedGuild) : dataSourceManager.getAllPlayers();
-            
-            // 过滤已在团队中的成员
-            const assignedPlayers = getAllAssignedPlayers();
-            players = players.filter(p => !assignedPlayers.includes(p['玩家名字']));
-            
-            // 基于接龙名单筛选
-            if (filterByRelay && relayData.length > 0) {
-                const relayPlayerNames = relayData.map(item => normalizePlayerName(item.xg_relay_player_name));
-                players = players.filter(p => relayPlayerNames.includes(normalizePlayerName(p['玩家名字'])));
-            }
-            
-            if (players.length === 0) {
-                alert('没有可用成员进行分配');
-                return;
-            }
-            
-            // 获取职业配置
-            const groups = teamStructure[teamName];
-            const professionConfig = {};
-            
-            groups.forEach((group, idx) => {
-                professionConfig[idx] = {};
-                ['铁衣', '血河', '素问', '九灵', '龙吟', '碎梦', '神相', '玄机', '潮光', '沧澜'].forEach(prof => {
-                    const input = document.getElementById(`prof-config-${idx}-${prof}`);
-                    if (input) {
-                        professionConfig[idx][prof] = parseInt(input.value) || 0;
-                    }
-                });
-            });
-            
-            // 执行智能分配算法
-            smartGroupResult = performSmartGrouping(players, groups, professionConfig, strategy, considerYxq);
-            
-            // 显示结果
-            displaySmartGroupResult(smartGroupResult);
-            
-            // 启用导入按钮
-            document.getElementById('importToSquadBtn').disabled = false;
-        }
-        
-        // 执行智能分配算法（简化版）
-        function performSmartGrouping(players, groups, professionConfig, strategy, considerYxq) {
-            const result = {
-                teamName: '',
-                groups: []
-            };
-            
-            // 按策略排序玩家
-            let sortedPlayers = [...players];
-            switch (strategy) {
-                case 'damage':
-                    sortedPlayers.sort((a, b) => (b['对玩家伤害'] || 0) - (a['对玩家伤害'] || 0));
-                    break;
-                case 'defense':
-                    sortedPlayers.sort((a, b) => (b['承受伤害'] || 0) - (a['承受伤害'] || 0));
-                    break;
-                default:
-                    // 平衡策略：按综合评分排序
-                    sortedPlayers.sort((a, b) => {
-                        const scoreA = calculatePlayerBalanceScore(a);
-                        const scoreB = calculatePlayerBalanceScore(b);
-                        return scoreB - scoreA;
-                    });
-            }
-            
-            // 为每个组分配成员
-            groups.forEach((group, groupIdx) => {
-                const groupResult = {
-                    name: group.name,
-                    limit: group.limit,
-                    members: [],
-                    professionCount: {}
-                };
-                
-                // 初始化职业计数
-                Object.keys(professionConfig[groupIdx] || {}).forEach(prof => {
-                    groupResult.professionCount[prof] = 0;
-                });
-                
-                // 根据职业配置分配成员
-                const config = professionConfig[groupIdx] || {};
-                Object.entries(config).forEach(([prof, count]) => {
-                    if (count <= 0) return;
-                    
-                    const profPlayers = sortedPlayers.filter(p => p['职业'] === prof);
-                    for (let i = 0; i < Math.min(count, profPlayers.length) && groupResult.members.length < group.limit; i++) {
-                        const player = profPlayers[i];
-                        if (!groupResult.members.find(m => m['玩家名字'] === player['玩家名字'])) {
-                            groupResult.members.push(player);
-                            groupResult.professionCount[prof] = (groupResult.professionCount[prof] || 0) + 1;
-                            
-                            // 从可用列表中移除
-                            const idx = sortedPlayers.indexOf(player);
-                            if (idx > -1) sortedPlayers.splice(idx, 1);
-                        }
-                    }
-                });
-                
-                // 填充剩余位置
-                while (groupResult.members.length < group.limit && sortedPlayers.length > 0) {
-                    const nextPlayer = sortedPlayers.shift();
-                    if (!groupResult.members.find(m => m['玩家名字'] === nextPlayer['玩家名字'])) {
-                        groupResult.members.push(nextPlayer);
-                        const prof = nextPlayer['职业'];
-                        groupResult.professionCount[prof] = (groupResult.professionCount[prof] || 0) + 1;
-                    }
-                }
-                
-                result.groups.push(groupResult);
-            });
-            
-            return result;
-        }
-        
-        // 计算玩家平衡评分
-        function calculatePlayerBalanceScore(player) {
-            const damage = parseFloat(player['对玩家伤害']) || 0;
-            const kills = parseFloat(player['击败']) || 0;
-            const assists = parseFloat(player['助攻']) || 0;
-            const healing = parseFloat(player['治疗值']) || 0;
-            
-            // 归一化评分
-            const damageScore = Math.min(100, damage / 10000);
-            const killsScore = kills * 5;
-            const assistsScore = assists * 2;
-            const healingScore = Math.min(100, healing / 5000);
-            
-            return damageScore + killsScore + assistsScore + healingScore;
-        }
-        
-        // 显示智能分团结果
-        function displaySmartGroupResult(result) {
-            const container = document.getElementById('smartGroupResult');
-            
-            if (!result || result.groups.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-400 py-8">
-                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                        <p>分团失败，请检查配置</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = result.groups.map(group => `
-                <div class="border border-gray-600 rounded-lg p-4 mb-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <h5 class="font-bold text-blue-400">${group.name}</h5>
-                        <span class="text-xs text-gray-400">${group.members.length}/${group.limit}人</span>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-2">
-                        ${group.members.map(member => `
-                            <div class="bg-gray-700 rounded p-2 text-xs">
-                                <div class="font-medium text-white">${member['玩家名字']}</div>
-                                <div class="text-gray-400">${member['职业']}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="text-xs text-gray-400">
-                        职业配置: ${Object.entries(group.professionCount).filter(([,count]) => count > 0).map(([prof, count]) => `${prof}×${count}`).join(', ')}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // 一键导入小队排表
-        function importToSquadBuilder() {
-            if (!smartGroupResult || !smartGroupResult.groups || smartGroupResult.groups.length === 0) {
-                alert('没有可导入的分团结果');
-                return;
-            }
-            
-            const teamName = document.getElementById('smartGroupTargetTeam').value;
-            if (!teamName || !teamStructure[teamName]) {
-                alert('目标团队不存在');
-                return;
-            }
-            
-            // 清空现有组成员
-            teamStructure[teamName].forEach(group => {
-                group.members = [];
-            });
-            
-            // 导入智能分团结果
-            smartGroupResult.groups.forEach((smartGroup, idx) => {
-                if (teamStructure[teamName][idx]) {
-                    teamStructure[teamName][idx].members = smartGroup.members.map(m => m['玩家名字']);
-                }
-            });
-            
-            // 切换到小队排表标签
-            const squadBuilderBtn = document.querySelector('button[onclick*="squadBuilder"]');
-            if (squadBuilderBtn) {
-                squadBuilderBtn.click();
-            }
-            
-            // 重新渲染
-            renderAllTeams();
-            updateTeamAnalysisTable();
-            updateTeamRightPanel();
-            
-            alert('智能分团结果已成功导入小队排表！');
-        }
-        
-        // 清空智能分团结果
-        function clearSmartGroupResult() {
-            smartGroupResult = null;
-            document.getElementById('smartGroupResult').innerHTML = `
-                <div class="text-center text-gray-400 py-8">
-                    <i class="fas fa-info-circle text-2xl mb-2"></i>
-                    <p>点击"开始智能分团"查看结果</p>
-                </div>
-            `;
-            document.getElementById('importToSquadBtn').disabled = true;
-        }
-        
-        // ==================== 统计面板模块 ====================
-
-        let statsBattleParticipants = {};
-        let statsAnalysisFilter = null; // 当前筛选类别
-        let statsAnalysisRowsCache = []; // 接龙分析数据缓存
-
-        function toggleAnalysisFilter(category) {
-            statsAnalysisFilter = statsAnalysisFilter === category ? null : category;
-            updateAnalysisLegendUI();
-            renderStatsAnalysisTable(statsAnalysisRowsCache);
-        }
-        function clearAnalysisFilter() {
-            statsAnalysisFilter = null;
-            updateAnalysisLegendUI();
-            renderStatsAnalysisTable(statsAnalysisRowsCache);
-        }
-        function updateAnalysisLegendUI() {
-            document.querySelectorAll('#statsAnalysisLegend [data-filter]').forEach(el => {
-                const f = el.dataset.filter;
-                if (statsAnalysisFilter === f) {
-                    el.classList.add('bg-blue-600', 'text-white');
-                    el.classList.remove('bg-gray-700/50');
-                } else if (statsAnalysisFilter) {
-                    el.classList.remove('bg-blue-600', 'text-white');
-                    el.classList.add('bg-gray-700/50', 'opacity-50');
-                } else {
-                    el.classList.remove('bg-blue-600', 'text-white', 'opacity-50');
-                    el.classList.add('bg-gray-700/50');
-                }
-            });
-        }
-
-        function initStatisticsPanel() {
-            loadStatsBattleParticipants();
-            refreshStatisticsPanel();
-        }
-
-        function getMainGuildMembers() {
-            return guildMembers.filter(m => !m.deleted && m.guild === 'main');
-        }
-
-        function importStatsBattleFile(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const lines = e.target.result.split('\n').filter(l => l.trim());
-                    const players = [];
-                    lines.forEach((line, idx) => {
-                        const name = line.split(',')[0].trim().replace(/^["']|["']$/g, '');
-                        if (idx === 0 && /玩家|名字|姓名/.test(name)) return;
-                        if (name && name !== '玩家名字') players.push(name);
-                    });
-                    const unique = [...new Set(players)];
-                    statsBattleParticipants[`stats_${Date.now()}`] = {
-                        fileName: file.name,
-                        importTime: new Date().toISOString(),
-                        players: unique
-                    };
-                    localStorage.setItem('statsBattleParticipants', JSON.stringify(statsBattleParticipants));
-                    alert(`导入成功！共 ${unique.length} 名参赛人员`);
-                    refreshStatisticsPanel();
-                } catch (err) {
-                    alert('导入失败：' + err.message);
-                    console.error('导入参赛名单失败:', err);
-                }
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        function refreshStatisticsPanel() {
-            const setText = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = val;
-            };
-            const analysisEl = document.getElementById('statsAnalysisTable');
-            const attendanceEl = document.getElementById('statsAttendanceRate');
-
-            // 使用帮会成员管理模块的本帮成员作为基准
-            const allMembers = getMainGuildMembers();
-            if (allMembers.length === 0) {
-                setText('statTotalMembers', '-');
-                setText('statRelayCount', '-');
-                setText('statParticipantCount', '-');
-                setText('statLeaveCount', '-');
-                setText('statBenchCount', '-');
-                setText('statNotRelayButParticipant', '-');
-                if (analysisEl) analysisEl.innerHTML = '<div class="text-center text-gray-400 py-4">暂无帮会成员数据，请先在「帮会人员」模块中添加或同步成员</div>';
-                if (attendanceEl) attendanceEl.innerHTML = '<div class="text-center text-gray-400 py-4">暂无帮会成员数据，请先在「帮会人员」模块中添加或同步成员</div>';
-                return;
-            }
-
-            const relayNames = new Set(relayData.map(r => normalizePlayerName(r.xg_relay_player_name)).filter(n => n));
-            const relayStatusMap = {};
-            relayData.forEach(r => { relayStatusMap[normalizePlayerName(r.xg_relay_player_name)] = r.xg_relay_status; });
-            const sessions = Object.values(statsBattleParticipants);
-            let latest = [];
-            if (sessions.length >= 2) {
-                const last = sessions[sessions.length - 1];
-                const prev = sessions[sessions.length - 2];
-                const timeDiff = new Date(last.importTime) - new Date(prev.importTime);
-                if (timeDiff <= 15 * 60 * 1000) {
-                    latest = [...new Set([...prev.players, ...last.players])];
-                } else {
-                    latest = last.players;
-                }
-            } else if (sessions.length === 1) {
-                latest = sessions[0].players;
-            }
-            const participantNames = new Set(latest);
-
-            let notRelayButParticipant = 0;
-            let notRelayNotParticipant = 0;
-            let relayButNotParticipant = 0;
-            let relayAndParticipant = 0;
-            let leaveCount = 0;
-            let benchCount = 0;
-            const analysisRows = [];
-
-            allMembers.forEach(member => {
-                const name = member.name;
-                const normName = normalizePlayerName(name);
-                const status = relayStatusMap[normName] || '';
-                const isRelay = relayNames.has(normName);
-                const isParticipant = participantNames.has(name);
-
-                if (status === '请假') {
-                    leaveCount++;
-                    analysisRows.push({
-                        name,
-                        profession: member.profession1 || member.profession2 || '未知',
-                        isRelay: true,
-                        isParticipant: false,
-                        category: '已请假'
-                    });
-                    return;
-                }
-                if (status === '替补') {
-                    benchCount++;
-                    analysisRows.push({
-                        name,
-                        profession: member.profession1 || member.profession2 || '未知',
-                        isRelay: true,
-                        isParticipant: false,
-                        category: '已替补'
-                    });
-                    return;
-                }
-
-                if (!isRelay && isParticipant) notRelayButParticipant++;
-                if (!isRelay && !isParticipant) notRelayNotParticipant++;
-                if (isRelay && !isParticipant) relayButNotParticipant++;
-                if (isRelay && isParticipant) relayAndParticipant++;
-
-                analysisRows.push({
-                    name,
-                    profession: member.profession1 || member.profession2 || '未知',
-                    isRelay,
-                    isParticipant,
-                    category: isRelay ? (isParticipant ? '已接龙且参赛' : '已接龙未参赛') : (isParticipant ? '未接龙但参赛' : '未接龙未参赛')
-                });
-            });
-
-            const mainMemberNames = new Set(allMembers.map(m => m.name));
-            const mainParticipantCount = latest.filter(name => mainMemberNames.has(name)).length;
-            setText('statTotalMembers', allMembers.length);
-            setText('statRelayCount', relayNames.size);
-            setText('statParticipantCount', mainParticipantCount);
-            setText('statLeaveCount', leaveCount);
-            setText('statBenchCount', benchCount);
-            setText('statNotRelayButParticipant', notRelayButParticipant);
-
-            statsAnalysisRowsCache = analysisRows;
-            renderStatsAnalysisTable(analysisRows);
-            renderStatsAttendanceRate(allMembers);
-        }
-
-        // 未接龙成员文字列表一键输出（弹窗 + 复制到剪贴板）
-        function exportNotRelayMemberList() {
-            const rows = statsAnalysisRowsCache || [];
-            // 包含"未接龙但参赛"和"未接龙未参赛"
-            const notRelayRows = rows.filter(r => r.category === '未接龙但参赛' || r.category === '未接龙未参赛');
-            if (!notRelayRows.length) {
-                alert('当前没有未接龙的成员');
-                return;
-            }
-
-            const lines = notRelayRows.map((r, idx) => `${idx + 1}. ${r.name} (${r.profession})`);
-            const text = lines.join('\n');
-
-            // 复制到剪贴板
-            navigator.clipboard.writeText(text).then(() => {
-                // 弹窗显示
-                const modal = document.createElement('div');
-                modal.id = 'notRelayExportModal';
-                modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);';
-                modal.innerHTML = `
-                    <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:12px;max-width:480px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,0.5);">
-                        <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
-                            <h3 style="margin:0;font-size:1.1rem;font-weight:bold;color:#e2e8f0;"><i class="fas fa-clipboard-list mr-2 text-blue-400"></i>未接龙成员列表（共 ${notRelayRows.length} 人）</h3>
-                            <button onclick="document.getElementById('notRelayExportModal').remove()" style="background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div style="padding:16px 20px;overflow-y:auto;flex:1;">
-                            <textarea id="notRelayExportText" style="width:100%;height:240px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#cbd5e1;padding:12px;font-size:0.9rem;resize:vertical;" readonly>${text.replace(/</g, '&lt;')}</textarea>
-                            <p style="margin:8px 0 0;color:#64748b;font-size:0.75rem;">已自动复制到剪贴板，可直接粘贴使用</p>
-                        </div>
-                        <div style="padding:12px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:8px;justify-content:flex-end;">
-                            <button onclick="document.getElementById('notRelayExportModal').remove()" style="padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#94a3b8;cursor:pointer;font-size:0.85rem;">关闭</button>
-                            <button onclick="navigator.clipboard.writeText(document.getElementById('notRelayExportText').value);alert('已重新复制到剪贴板');" style="padding:8px 16px;background:#3b82f6;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:0.85rem;"><i class="fas fa-copy mr-1"></i>复制</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-                // 点击背景关闭
-                modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-            }).catch(() => {
-                // 复制失败时仍然弹窗显示，让用户手动复制
-                alert('复制失败，请手动复制弹窗中的内容');
-            });
-        }
-
-        function renderStatsAnalysisTable(rows) {
-            const container = document.getElementById('statsAnalysisTable');
-            if (!container) return;
-            let displayRows = rows;
-            if (statsAnalysisFilter) {
-                displayRows = rows.filter(r => r.category === statsAnalysisFilter);
-            }
-            if (!displayRows.length) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-4">暂无成员数据</div>';
-                return;
-            }
-            const order = { '未接龙但参赛': 0, '未接龙未参赛': 1, '已接龙未参赛': 2, '已请假': 3, '已替补': 4, '已接龙且参赛': 5 };
-            displayRows.sort((a, b) => order[a.category] - order[b.category]);
-            const colors = { '已接龙且参赛': 'green', '已接龙未参赛': 'red', '未接龙但参赛': 'blue', '未接龙未参赛': 'gray', '已请假': 'gray', '已替补': 'yellow' };
-            container.innerHTML = `
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-800 sticky top-0"><tr>
-                        <th class="p-2 text-left">玩家名字</th>
-                        <th class="p-2 text-left">职业</th>
-                        <th class="p-2 text-center">是否接龙</th>
-                        <th class="p-2 text-center">是否参赛</th>
-                        <th class="p-2 text-center">状态分类</th>
-                    </tr></thead>
-                    <tbody>${displayRows.map(r => {
-                        const c = colors[r.category] || 'gray';
-                        return `<tr class="border-b border-gray-700 hover:bg-gray-800">
-                            <td class="p-2 font-medium">${r.name}</td>
-                            <td class="p-2 text-gray-400">${r.profession}</td>
-                            <td class="p-2 text-center">${r.isRelay ? '<span class="text-green-400">是</span>' : '<span class="text-red-400">否</span>'}</td>
-                            <td class="p-2 text-center">${r.isParticipant ? '<span class="text-green-400">是</span>' : '<span class="text-gray-400">否</span>'}</td>
-                            <td class="p-2 text-center">
-                                <span class="inline-block w-2 h-2 rounded-full bg-${c}-500 mr-1"></span>
-                                <span class="text-${c}-400">${r.category}</span>
-                            </td>
-                        </tr>`;
-                    }).join('')}</tbody>
-                </table>`;
-        }
-
-        function getCurrentSaturday() {
-            const d = new Date();
-            while (d.getDay() !== 6) d.setDate(d.getDate() - 1);
-            d.setHours(0, 0, 0, 0);
-            return d;
-        }
-
-        function calculateExpectedBattleCount(joinDateStr) {
-            if (!joinDateStr) return 0;
-            const joinDate = new Date(joinDateStr);
-            joinDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(23, 59, 59, 999);
-            if (joinDate > today) return 0;
-
-            const currentSat = getCurrentSaturday();
-            let firstSat = new Date(joinDate);
-            while (firstSat.getDay() !== 6) firstSat.setDate(firstSat.getDate() + 1);
-            firstSat.setHours(0, 0, 0, 0);
-
-            let count = 0;
-            for (let d = new Date(firstSat); d <= today; d.setDate(d.getDate() + 7)) {
-                const weekDiff = Math.round((currentSat - d) / (7 * 24 * 60 * 60 * 1000));
-                count += (weekDiff % 2 === 0) ? 2 : 1;
-            }
-            return Math.min(3, count);
-        }
-
-        function renderStatsAttendanceRate(allMembers) {
-            const container = document.getElementById('statsAttendanceRate');
-            if (!container) return;
-
-            // 从 xg_data_import 的多场缓存中读取所有场次
-            let multiBattles = [];
-            try {
-                const cached = localStorage.getItem('multiBattleCache_v4');
-                if (cached) multiBattles = JSON.parse(cached);
-            } catch (e) {
-                console.error('读取多场缓存失败', e);
-            }
-
-            if (!multiBattles.length) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-4">暂无导入的场次数据，请先在「数据导入」中导入多场帮战数据</div>';
-                return;
-            }
-
-            const battles = [...multiBattles].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 3);
-
-            const guildName = dataSourceManager.selectedGuild || dataSourceManager.getGuildNames()[0] || localStorage.getItem('xg_nsh_guild1Name') || null;
-            if (!guildName) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-4">未识别到帮会名称</div>';
-                return;
-            }
-
-            const count = {};
-            allMembers.forEach(m => count[m.name] = 0);
-
-            battles.forEach(battle => {
-                const battleData = battle.guilds || battle.data || {};
-                const players = battleData[guildName] || [];
-                const names = new Set(players.map(p => p['玩家名字']).filter(n => n));
-                Object.keys(count).forEach(n => { if (names.has(n)) count[n]++; });
-            });
-
-            const data = allMembers.map(m => {
-                const expected = calculateExpectedBattleCount(m.joinDate);
-                const actual = count[m.name] || 0;
-                const rate = expected > 0 ? Math.min(1, actual / expected) : 0;
-                return { name: m.name, rate, actual, expected };
-            }).sort((a, b) => b.rate - a.rate || a.name.localeCompare(b.name));
-
-            container.innerHTML = `
-                <div class="mb-3 text-sm text-gray-400">按实际应参加场数计算（单周2场 / 双周1场）</div>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-800 sticky top-0"><tr>
-                        <th class="p-2 text-left">排名</th>
-                        <th class="p-2 text-left">玩家名字</th>
-                        <th class="p-2 text-center">参赛/应参</th>
-                        <th class="p-2 text-center">参赛率</th>
-                        <th class="p-2 text-left" style="min-width:120px">进度</th>
-                    </tr></thead>
-                    <tbody>${data.map((item, i) => {
-                        const pct = (item.rate * 100).toFixed(0);
-                        const color = item.rate >= 0.67 ? 'green' : item.rate >= 0.34 ? 'yellow' : 'red';
-                        const showRate = item.expected > 0 ? `${pct}%` : '-';
-                        const showCount = item.expected > 0 ? `${item.actual}/${item.expected}` : `${item.actual}/0`;
-                        const barWidth = item.expected > 0 ? pct : 0;
-                        return `<tr class="border-b border-gray-700 hover:bg-gray-800">
-                            <td class="p-2 text-gray-400">${i + 1}</td>
-                            <td class="p-2 font-medium">${item.name}</td>
-                            <td class="p-2 text-center">${showCount}</td>
-                            <td class="p-2 text-center font-bold text-${color}-400">${showRate}</td>
-                            <td class="p-2"><div class="w-full bg-gray-700 rounded-full h-2">
-                                <div class="bg-${color}-500 h-2 rounded-full transition-all" style="width:${barWidth}%"></div>
-                            </div></td>
-                        </tr>`;
-                    }).join('')}</tbody>
-                </table>`;
-        }
-
-        function loadStatsBattleParticipants() {
-            try {
-                const saved = localStorage.getItem('statsBattleParticipants');
-                if (saved) statsBattleParticipants = JSON.parse(saved);
-            } catch (e) {
-                console.error('加载统计面板数据失败', e);
-                statsBattleParticipants = {};
-            }
-        }
     </script>
 
     <!-- 页脚 -->
@@ -12504,5 +10179,31 @@
             <div id="teamImageContent" class="bg-gray-900 rounded-xl p-8 shadow-2xl" style="min-width: 1200px; background-color: #111827;"></div>
         </div>
     </div>
+<!-- 批量删除成员 Modal -->
+<div id="batchDeleteModal" class="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm hidden flex items-center justify-center">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 shadow-2xl w-[600px] max-w-[90vw] max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700">
+            <h3 class="text-lg font-bold text-white" id="batchDeleteTitle">批量删除成员</h3>
+            <button onclick="closeBatchDeleteModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-4 flex flex-col gap-3" style="min-height: 0;">
+            <div class="flex gap-2">
+                <input type="text" id="batchDeleteSearch" placeholder="搜索成员..." class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm" oninput="filterBatchDeleteList()">
+            </div>
+            <div class="flex gap-2 text-xs">
+                <button onclick="batchDeleteSelectAll()" class="px-3 py-1 bg-blue-600 rounded text-white hover:bg-blue-700">全选</button>
+                <button onclick="batchDeleteInvert()" class="px-3 py-1 bg-gray-600 rounded text-white hover:bg-gray-500">反选</button>
+                <span class="ml-auto text-gray-400 self-center" id="batchDeleteCount">已选 0 人</span>
+            </div>
+            <div id="batchDeleteList" class="overflow-y-auto border border-gray-700 rounded-lg bg-gray-800/50" style="max-height: 50vh;">
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 px-5 py-3 border-t border-gray-700">
+            <button onclick="closeBatchDeleteModal()" class="px-4 py-2 bg-gray-700 rounded-lg text-white text-sm hover:bg-gray-600">取消</button>
+            <button onclick="executeBatchDelete()" class="px-4 py-2 bg-red-600 rounded-lg text-white text-sm hover:bg-red-700">删除选中</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

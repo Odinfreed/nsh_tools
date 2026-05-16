@@ -5064,11 +5064,11 @@
             // 初始化数据源管理器
             initDataSourceManager();
             
-            // 延迟初始化非首屏模块，避免阻塞首屏渲染
-            setTimeout(() => {
-                if (typeof initRelaySystem === 'function') initRelaySystem();
-                if (typeof initStatisticsPanel === 'function') initStatisticsPanel();
-            }, 0);
+            // 初始化接龙名单系统
+            initRelaySystem();
+            
+            // 初始化统计面板
+            initStatisticsPanel();
             
             // 从localStorage加载保存的权重配置
             try {
@@ -10155,6 +10155,9 @@
             renderSquadList();
         }
 
+
+
+        
     </script>
 
     <!-- 页脚 -->

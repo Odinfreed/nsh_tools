@@ -7995,17 +7995,17 @@
             const teams = Object.keys(teamStructure);
             const sortedTeams = teamOrder.filter(t => teams.includes(t)).concat(teams.filter(t => !teamOrder.includes(t)));
 
-            let html = '<div style="font-family: \'Noto Sans SC\', sans-serif; color: #e5e7eb;">';
-            html += '<h1 style="text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 24px; color: #fff;">联赛分团排表</h1>';
+            let html = '<div style="font-family: \'Noto Sans SC\', sans-serif; color: #1f2937;">';
+            html += '<h1 style="text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 24px; color: #111827;">联赛分团排表</h1>';
             html += '<div style="display: flex; flex-direction: column; gap: 24px;">';
 
             sortedTeams.forEach(teamName => {
                 const groups = teamStructure[teamName] || [];
                 const leader = teamStructure[teamName].leader || '';
-                html += '<div style="background: #1f2937; border-radius: 12px; padding: 16px; border: 1px solid #374151;">';
+                html += '<div style="background: #f3f4f6; border-radius: 12px; padding: 16px; border: 1px solid #d1d5db;">';
                 html += '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">';
-                html += `<h2 style="font-size: 18px; font-weight: 700; color: #60a5fa;">${teamName}</h2>`;
-                if (leader) html += `<span style="font-size: 12px; color: #9ca3af;">团长: ${leader}</span>`;
+                html += `<h2 style="font-size: 24px; font-weight: 700; color: #2563eb;">${teamName}</h2>`;
+                if (leader) html += `<span style="font-size: 14px; color: #6b7280;">团长: ${leader}</span>`;
                 html += '</div>';
                 html += '<div style="display: flex; flex-wrap: wrap; gap: 12px;">';
 
@@ -8013,15 +8013,15 @@
                     const members = group.members || [];
                     group.positions = group.positions || Array(group.limit).fill('');
                     group.skills = group.skills || Array(group.limit).fill([]);
-                    html += '<div style="background: #111827; border-radius: 8px; padding: 10px; min-width: 320px; flex: 1; border: 1px solid #374151;">';
-                    html += `<div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #d1d5db;">${group.name} <span style="color: #6b7280; font-size: 11px;">(${members.length}/${group.limit})</span></div>`;
+                    html += '<div style="background: #ffffff; border-radius: 8px; padding: 12px; min-width: 360px; flex: 1; border: 1px solid #d1d5db;">';
+                    html += `<div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #374151;">${group.name} <span style="color: #9ca3af; font-size: 13px;">(${members.length}/${group.limit})</span></div>`;
                     // 表格形式展示：游戏ID、定位、技能内功、确认
-                    html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-                    html += '<thead><tr style="color:#9ca3af;font-size:11px;border-bottom:1px solid #374151;">';
-                    html += '<th style="text-align:left;padding:4px 6px;font-weight:500;">游戏ID</th>';
-                    html += '<th style="text-align:left;padding:4px 6px;font-weight:500;">定位</th>';
-                    html += '<th style="text-align:left;padding:4px 6px;font-weight:500;">技能内功</th>';
-                    html += '<th style="text-align:center;padding:4px 6px;font-weight:500;width:40px;">确认</th>';
+                    html += '<table style="width:100%;border-collapse:collapse;font-size:15px;">';
+                    html += '<thead><tr style="color:#6b7280;font-size:13px;border-bottom:1px solid #e5e7eb;">';
+                    html += '<th style="text-align:left;padding:6px 8px;font-weight:500;">游戏ID</th>';
+                    html += '<th style="text-align:left;padding:6px 8px;font-weight:500;">定位</th>';
+                    html += '<th style="text-align:left;padding:6px 8px;font-weight:500;">技能内功</th>';
+                    html += '<th style="text-align:center;padding:6px 8px;font-weight:500;width:40px;">确认</th>';
                     html += '</tr></thead><tbody>';
                     for (let i = 0; i < group.limit; i++) {
                         const playerName = members[i] || '';
@@ -8046,7 +8046,7 @@
                             if (profession === '惊鸿' || profession === '妙音') profession = '鸿音';
                             const bgColor = getProfessionColor(profession);
                             const relayItem = findRelayByPlayerName(playerName);
-                            const benchBadge = relayItem && relayItem.xg_relay_status === '替补' ? '<span style="margin-left:4px;padding:1px 4px;background:#ca8a04;color:#fff;border-radius:3px;font-size:10px;">替补</span>' : '';
+                            const benchBadge = relayItem && relayItem.xg_relay_status === '替补' ? '<span style="margin-left:4px;padding:2px 5px;background:#ca8a04;color:#fff;border-radius:3px;font-size:12px;">替补</span>' : '';
                             const pos = group.positions[i] || '';
                             let skills = group.skills[i];
                             if (typeof skills === 'string') skills = skills ? [skills] : [];
@@ -8054,24 +8054,24 @@
                             const skillsStr = skills.join('，') || '';
                             const skillsDisplay = skillsStr ? wrapSkillsByLength(skillsStr, 13) : '';
                             const isConfirmed = confirmedMembers.has(playerName);
-                            const confirmCheck = isConfirmed ? '<span style="color:#22c55e;font-size:14px;font-weight:bold;">✓</span>' : '';
-                            const rowBg = isConfirmed ? 'background:rgba(34,197,94,0.08);' : '';
-                            html += `<tr style="border-bottom:1px solid #1f2937;${rowBg}">`;
-                            html += `<td style="padding:6px 6px;cursor:pointer;" onclick="toggleConfirmMember('${playerName}')" title="点击确认/取消入团">`;
-                            html += `<div style="display:flex;align-items:center;gap:6px;">`;
-                            html += `<span style="width:6px;height:6px;border-radius:50%;background:${bgColor};flex-shrink:0;"></span>`;
-                            html += `<span style="font-weight:500;color:#f3f4f6;">${playerName}</span>${benchBadge}`;
+                            const confirmCheck = isConfirmed ? '<span style="color:#16a34a;font-size:16px;font-weight:bold;">✓</span>' : '';
+                            const rowBg = isConfirmed ? 'background:rgba(34,197,94,0.10);' : '';
+                            html += `<tr style="border-bottom:1px solid #e5e7eb;${rowBg}">`;
+                            html += `<td style="padding:8px 8px;cursor:pointer;" onclick="toggleConfirmMember('${playerName}')" title="点击确认/取消入团">`;
+                            html += `<div style="display:flex;align-items:center;gap:8px;">`;
+                            html += `<span style="width:8px;height:8px;border-radius:50%;background:${bgColor};flex-shrink:0;"></span>`;
+                            html += `<span style="font-weight:500;color:#111827;">${playerName}</span>${benchBadge}`;
                             html += `</div></td>`;
-                            html += `<td style="padding:6px 6px;color:#6ee7b7;">${pos || '<span style="color:#4b5563;">—</span>'}</td>`;
-                            html += `<td style="padding:6px 6px;color:#fcd34d;white-space:normal;word-wrap:break-word;line-height:1.5;">${skillsDisplay || '<span style="color:#4b5563;">—</span>'}</td>`;
-                            html += `<td style="padding:6px 6px;text-align:center;">${confirmCheck}</td>`;
+                            html += `<td style="padding:8px 8px;color:#059669;">${pos || '<span style="color:#9ca3af;">—</span>'}</td>`;
+                            html += `<td style="padding:8px 8px;color:#b45309;white-space:normal;word-wrap:break-word;line-height:1.5;">${skillsDisplay || '<span style="color:#9ca3af;">—</span>'}</td>`;
+                            html += `<td style="padding:8px 8px;text-align:center;">${confirmCheck}</td>`;
                             html += `</tr>`;
                         } else {
-                            html += `<tr style="border-bottom:1px solid #1f2937;">`;
-                            html += `<td style="padding:6px 6px;color:#4b5563;">— 空位 —</td>`;
-                            html += `<td style="padding:6px 6px;color:#4b5563;">—</td>`;
-                            html += `<td style="padding:6px 6px;color:#4b5563;">—</td>`;
-                            html += `<td style="padding:6px 6px;color:#4b5563;text-align:center;">—</td>`;
+                            html += `<tr style="border-bottom:1px solid #e5e7eb;">`;
+                            html += `<td style="padding:8px 8px;color:#9ca3af;">— 空位 —</td>`;
+                            html += `<td style="padding:8px 8px;color:#9ca3af;">—</td>`;
+                            html += `<td style="padding:8px 8px;color:#9ca3af;">—</td>`;
+                            html += `<td style="padding:8px 8px;color:#9ca3af;text-align:center;">—</td>`;
                             html += `</tr>`;
                         }
                     }
@@ -8092,7 +8092,7 @@
                 return;
             }
             html2canvas(content, {
-                backgroundColor: '#111827',
+                backgroundColor: '#ffffff',
                 scale: 2,
                 useCORS: true
             }).then(canvas => {
@@ -10215,7 +10215,7 @@
             </div>
         </div>
         <div class="flex-1 overflow-auto p-6 flex items-start justify-center" id="teamImageModalBody">
-            <div id="teamImageContent" class="bg-gray-900 rounded-xl p-8 shadow-2xl" style="min-width: 1200px; background-color: #111827;"></div>
+            <div id="teamImageContent" class="bg-white rounded-xl p-8 shadow-2xl" style="min-width: 1200px; background-color: #ffffff;"></div>
         </div>
     </div>
 <!-- 批量删除成员 Modal -->
